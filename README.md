@@ -1,8 +1,12 @@
-# Project-Journal
-Reduce AI - Human communication gap by empowering memory mechanism and by introducing "Intelligent Distance" concept
 # Project Journal — AI Session Memory
 
-**Give your AI a memory that survives every session.**
+> **Reduce the AI-Human communication gap by empowering memory and introducing the Intelligent Distance framework.**
+
+[![Version](https://img.shields.io/badge/version-1.0.0-blue?style=flat-square)](https://github.com/tongwu-sh/project-journal)
+[![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Claude_Code-orange?style=flat-square)](https://claude.ai/code)
+[![Language](https://img.shields.io/badge/language-EN_%7C_%E4%B8%AD%E6%96%87-blueviolet?style=flat-square)](#)
+[![Author](https://img.shields.io/badge/author-Tongwu-crimson?style=flat-square)](https://github.com/tongwu-sh)
 
 <!-- AGENT-QUICK-REF
 name: project-journal
@@ -19,7 +23,7 @@ design_principle: Intelligent Distance — one file optimized for both human sca
 language_sections: "#english", "#中文"
 -->
 
-[English](#english) · [中文](#中文)
+[![English](https://img.shields.io/badge/English-0078D4?style=for-the-badge)](#english) [![中文](https://img.shields.io/badge/%E4%B8%AD%E6%96%87-CC3333?style=for-the-badge)](#中文)
 
 ---
 
@@ -74,7 +78,7 @@ Claude for development, another tool for design review. The journal is a neutral
 This is the deeper value. Project Journal installs more than a memory system — it installs a cognitive framework. The **Agent Observations** section (Section 9) trains your agent to notice things from its unique perception mode that you might miss: silent errors, stale assumptions, patterns in what you keep revisiting. Over sessions, your agent gets better at bridging the gap between what you say and what you actually need.
 
 **💡 You're not a developer, but you use AI for ongoing complex work**
-Research, writing, planning, content production — any multi-session AI-assisted work benefits from session continuity. The trigger words ("save", "checkpoint", "保存") work regardless of what you're building.
+Research, writing, planning, content production — any multi-session AI-assisted work benefits from session continuity. The trigger words ("save", "checkpoint", "log this") work regardless of what you're building.
 
 **You probably don't need this if:**
 - Your AI sessions are mostly short, one-off Q&A (no continuity needed)
@@ -92,7 +96,7 @@ Every time you restart a session and spend 10 minutes explaining the project aga
 
 **2. The gap between human and AI intelligence is permanent — and that's the point.**
 
-We call this the **Intelligent Distance (智能距离)** principle. It is the defining design concept behind this skill, and what sets it apart from every other memory or journaling tool.
+We call this the **Intelligent Distance** principle. It is the defining design concept behind this skill, and what sets it apart from every other memory or journaling tool.
 
 The gap is not a technology problem to be solved. It is structural:
 
@@ -126,12 +130,13 @@ You don't need to remember commands. Just say what feels natural:
 | You say | What happens |
 |---------|-------------|
 | `save` / `save session` | Saves full journal immediately |
-| `写日志` / `记录一下` / `保存` | Same, in Chinese |
 | `checkpoint` / `log this` | Same |
-| `I'm done for today` / `收工` / `今天就这样` | Agent asks: "Save a journal entry?" |
-| `continue tomorrow` / `明天继续` | Agent asks: "Save a journal entry?" |
+| `I'm done for today` / `done for the day` | Agent asks: "Save a journal entry?" |
+| `continue tomorrow` / `wrapping up` | Agent asks: "Save a journal entry?" |
 | `we just finished [X]` | Agent asks: "Want to log this milestone?" |
-| `don't save` / `skip` / `不用记` | Explicitly skips, no save |
+| `don't save` / `skip` | Explicitly skips, no save |
+
+> **Chinese speakers:** you can also say `保存` / `写日志` / `收工` — the agent understands both languages.
 
 The agent also uses smart judgment:
 - Sessions under 5 turns → no automatic suggestion
@@ -147,8 +152,6 @@ cp SKILL.md ~/.claude/skills/project-journal/SKILL.md
 
 # 2. That's it. Start a session and say:
 "save session"
-# or
-"写日志"
 ```
 
 ### File structure created in your project
@@ -532,5 +535,5 @@ A: Layer 1 的追加记录需要 agent 在每轮后主动执行。在超长会�
 
 ---
 
-*Made with Claude Code · Distributed via clawhub.ai*
+*Concept & Design: [Tongwu](https://github.com/tongwu-sh) · Built with Claude Code · Distributed via clawhub.ai*
 *License: MIT*
