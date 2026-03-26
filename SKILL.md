@@ -211,7 +211,7 @@ Layer 1: Quick Capture (hybrid: hook-driven + manual)
 
 Layer 2: Daily Journal
   → Runs when user explicitly saves OR end-of-session
-  → File: journal/YYYY-MM-DD.md (full 9-section report)
+  → File: journal/YYYY-MM-DD.md (full 10-section report)
   → Synthesizes Layer 1 log + conversation context
   → Cost: ~800 tokens to generate, once per day
 ```
@@ -489,13 +489,12 @@ IF not exists → create with JOURNAL TEMPLATE
 
 ## 9、机器观察 / Agent Observations
 
-> **智能距离原则 (Intelligent Distance)**:
-> Human intelligence and artificial intelligence do not differ in level —
-> they differ in kind. Humans perceive through vision, emotion, and physical
-> intuition. Agents perceive through token streams, file structures, and
-> logical dependencies. These are two fundamentally different modes of
-> understanding the same reality. This section captures what the agent's
-> mode of perception reveals that the human's mode may not.
+> **Intelligent Distance Principle / 智能距离原则**:
+>
+> Human and AI intelligence differ in kind, not level. Humans perceive through
+> vision, emotion, and physical intuition. Agents perceive through token streams,
+> file structures, and logical dependencies. This section captures what the
+> agent's perception mode reveals that the human's mode may not.
 >
 > Rules:
 > - Write what YOU noticed, not what you said out loud.
@@ -503,10 +502,10 @@ IF not exists → create with JOURNAL TEMPLATE
 > - If user mentions stress, deadline, or frustration — capture it. Invisible context shapes decisions.
 > - If this observation echoes a previous session's Section 9, mark it with ⏱. Three ⏱ marks = pattern — include in next cold-start brief.
 > - At next session START: surface 🔴 items before asking what to work on.
-
-> 类型标记：
-> - 🔧 技术：代码结构、依赖关系、静默错误、状态漂移、架构风险
-> - 🧠 上下文：截止日期、压力信号、优先级变化、用户直觉、情绪线索
+>
+> Type markers / 类型标记：
+> - 🔧 Technical / 技术：code structure, dependencies, silent errors, state drift, architecture risks
+> - 🧠 Context / 上下文：deadlines, stress signals, priority shifts, user intuition, emotional cues
 
 | 类型 | 观察 | 重要性 | 用户是否知道 | 建议行动 |
 |------|------|--------|-------------|----------|
@@ -524,20 +523,16 @@ IF not exists → create with JOURNAL TEMPLATE
 |------|----------|------|------|
 | [artifact name] | [file path — memory/rules/skills] | [concept/feedback/rule] | [one line] |
 
-> Agent 保存规则：
-> - 如果产出是方法论/概念 → 写入 `memory/concept_*.md` + 更新 `MEMORY.md`
-> - 如果产出是工作偏好/反馈 → 写入 `memory/feedback_*.md` + 更新 `MEMORY.md`
-> - 如果产出是硬性规则 → 写入 `~/.claude/rules/*.md`
-> - 如果没有跨项目产出 → 写"本次无跨项目输出"，不留空
-
+> Save rules / 保存规则：
+> - Methodology or concept → write to `memory/concept_*.md` + update `MEMORY.md`
+> - Preference or feedback → write to `memory/feedback_*.md` + update `MEMORY.md`
+> - Hard rule → write to `~/.claude/rules/*.md`
+> - No cross-project output → write "None this session / 本次无跨项目输出" (do not leave blank)
+>
 > Examples:
-> - 🔧 "Project is more complete than user realizes — admin/dashboard already existed"
-> - 🔧 "Mock data is silently returning 200, user may think real API is working"
-> - 🔧 "Decision made in session 1 now contradicts current direction"
-> - 🔧 "User's mental model of how X works doesn't match the actual implementation"
-> - 🧠 "This 🔴 task has appeared 3 sessions without progress — likely actually blocked"
-> - 🧠 "User said 'feels off' about the auth flow — no errors yet, but worth investigating"
-> - 🧠 "User mentioned needing to ship by Thursday — deadline not tracked anywhere else"
+> - "Agent Five Pillars framework" → `memory/concept_agent_five_pillars.md` (methodology)
+> - "Browser operation preference: opencli > open > MCP" → `~/.claude/rules/core-operations.md` (rule)
+> - "Research-first development principle" → `memory/feedback_research_first.md` (feedback)
 
 ---
 *保存时间: {YYYY-MM-DD HH:MM} · 质量: [productive/exploratory/blocked]*
@@ -698,10 +693,10 @@ AFTER this briefing:
 ### Handoff Rules
 
 1. **Handoff file** → `journal/handoff-{date}-{source}-to-{target}.md`
-2. **上下文 field** = 接收方 **必须知道的最少信息**，不是完整历史
-3. **输入材料** = 具体文件路径，不是"看一下 journal"
-4. **验收标准** = SMART（可衡量），不是"做好一点"
-5. **来源 agent 不规定 How** — 只定义 What 和 Done 标准，让接收方自己选路径
+2. **Context field** = minimum info the receiver MUST know, not full history
+3. **Input materials** = exact file paths, not "read the journal"
+4. **Acceptance criteria** = SMART (measurable), not "make it better"
+5. **Source agent does NOT prescribe How** — define What and Done criteria only, let receiver choose path
 6. After handoff, source agent writes Section 9 observation about what it couldn't finish and why
 
 ---
@@ -713,13 +708,13 @@ AFTER this briefing:
 | Exact paths | `app/api/research/route.ts` not "the research file" |
 | Honest issues | Section 4: if broken, write it. No hiding. |
 | Real decisions | Section 6: WHY not just WHAT + common misreads |
-| Decision format | 短决策用表格行，长决策（任意字段 >30 tokens）用键值对。避免 agent 在宽表格中列错位。 |
+| Decision format | Short decisions use table rows; long decisions (any field >30 tokens) use key-value format. Prevents column misalignment in wide tables. |
 | Actionable todos | Every 🔴 must be doable in one session |
 | Track repetition | Count sessions a 🔴 appears. ⏱3+ = flag as likely blocked. |
-| Track descoped items | 任务被主动放弃时，记录在 Section 5 "已放弃" 区 + Section 6决策记录。不允许静默消失。 |
+| Track descoped items | Descoped tasks go in Section 5 "已放弃" + Section 6 decision record. Never silently disappear. |
 | Real reflection | Section 7 is mandatory. Write something true. |
 | Agent observations | Section 9: write what you noticed, not what you said. |
-| Cold-start brief | Structured table (项目/上次做了/下一步/动量) + optional ⏱模式 row. Written for zero-context agent. |
+| Cold-start brief | Structured table (项目/大图/上次做了/下一步/动量) + optional ⏱模式 row. Written for zero-context agent. |
 | One file/day | Multiple sessions → update same daily file |
 | Language match | Follow user's language throughout |
 | Layer 1 first | Check -log.md before reconstructing from memory |
@@ -727,7 +722,7 @@ AFTER this briefing:
 | Report once | Session-start briefing happens ONCE. Never repeat mid-session. |
 | Trust intuition | User's "feels wrong" = 🔴 in Section 9. Don't dismiss without error logs. |
 | Capture invisible context | Deadlines, stress, priority shifts mentioned in passing → Section 9. |
-| Machine summary | 日志末尾的 `<!-- MACHINE-READABLE SUMMARY -->` 必须填充。momentum 用 green/yellow/red（emoji 的文字形式）。 |
+| Machine summary | Footer `<!-- MACHINE-READABLE SUMMARY -->` must be filled. Use green/yellow/red for momentum (text form of emoji). |
 | Emoji consistency | Always use emoji from the Emoji Vocabulary table. Never substitute text for emoji status markers. |
 | Decision chain | Section 6: every decision must have a `源自` field — either a date reference to an upstream decision, or "new". |
 | Cross-project check | Before saving: if session produced methodology, preferences, or rules applicable beyond this project → Section 10 + write to global memory/rules. |
