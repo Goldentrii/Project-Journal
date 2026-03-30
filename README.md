@@ -2,7 +2,7 @@
 
 > **Reduce the AI-Human communication gap by empowering memory and introducing the Intelligent Distance framework.**
 
-[![Version](https://img.shields.io/badge/version-1.3.0-blue?style=flat-square)](https://github.com/Goldentrii/project-journal)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue?style=flat-square)](https://github.com/Goldentrii/project-journal)
 [![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-Claude_Code-orange?style=flat-square)](https://claude.ai/code)
 [![OpenClaw Ready](https://img.shields.io/badge/OpenClaw-Ready-teal?style=flat-square)](https://clawhub.ai)
@@ -337,6 +337,42 @@ A: Layer 1 capture depends on the agent actively following instructions each tur
 
 ---
 
+---
+
+### What's new in v2.0.0
+
+**Think-Execute-Reflect Quality Loop (Section 7)**
+
+Section 7 was a flat list ("what went well / what didn't"). Now it's a structured quality loop:
+
+| Phase | What it does |
+|-------|-------------|
+| 🧠 **Think** | Was the goal SMART? Was research done before building? Was there a plan? |
+| ⚡ **Execute** | What was planned vs what actually happened? Where did they diverge? |
+| 🔍 **Reflect** | Self-score on 5 dimensions (1-5): research, plan, execution, verification, code quality. External review results. Intelligent Distance gap analysis. |
+| 🔄 **Feedback** | Explicit EXIT (quality sufficient) or LOOP (needs iteration). Insights that should become permanent memory. SOP/rule updates needed. |
+
+**Exit condition:** If everything went perfectly, Reflect is one line: "No gap. Goal achieved." Don't reflect for the sake of reflecting.
+
+**Memory Lifecycle**
+
+Memories now have a full lifecycle:
+
+| Feature | How it works |
+|---------|-------------|
+| **Auto-promotion** | If a journal insight appears 3+ times across sessions → automatically promoted to permanent memory |
+| **Confidence scoring** | Each memory tagged `high` / `medium` / `low` confidence |
+| **Verification dates** | Memories older than 14 days without verification get flagged on resume |
+| **Cross-references** | `related: [file1.md, file2.md]` in frontmatter links memories into a graph |
+| **Deprecation** | Outdated memories marked `deprecated: true` with reason, removed from index but kept for history |
+
+**Other improvements in v1.4→v2.0:**
+- Layer 1 is now explicitly optional (not expected every turn)
+- Machine summary includes `milestone: true/false`, `okr_linkage`, and `quality_scores`
+- Quality rules updated: self-score, promotion rule, loop-or-exit requirement
+
+---
+
 *Concept & Design: [Tongwu](https://github.com/Goldentrii) · Built with Claude Code · Distributed via clawhub.ai*
 *License: MIT*
 
@@ -645,6 +681,33 @@ A: 每天的日志约 2–4 KB，一年日用量约 1 MB，大多数项目无需
 
 **Q: 第一层日志没有自动创建——为什么？**
 A: Layer 1 的追加记录需要 agent 在每轮后主动执行。在超长会话中，agent 可能出现指令衰减（这是 LLM 的已知限制，不是 bug）。这种情况直接说"保存"触发 Layer 2 全量日志，它会从完整对话补偿重建内容。
+
+---
+
+### v2.0.0 更新内容
+
+**Think-Execute-Reflect 质量循环（Section 7）**
+
+Section 7 从扁平列表升级为结构化质量循环：
+
+| 阶段 | 做什么 |
+|------|--------|
+| 🧠 **Think** | 目标是否 SMART？做了 research 吗？有计划吗？ |
+| ⚡ **Execute** | 计划 vs 实际发生了什么？差距在哪？ |
+| 🔍 **Reflect** | 5 维自评（1-5 分）：research、plan、execution、verification、code quality。外部 review 结果。Intelligent Distance gap 分析。 |
+| 🔄 **Feedback** | 明确说 EXIT（质量够了）或 LOOP（需要迭代）。要不要写入 memory？要不要改 SOP？ |
+
+**退出条件：** 如果一切完美，Reflect 只需一行："No gap. Goal achieved." 不要为了反思而反思。
+
+**Memory 生命周期**
+
+| 功能 | 怎么工作 |
+|------|---------|
+| **自动晋升** | 如果一个 insight 在 journal 中出现 3+ 次 → 自动升级为永久 memory |
+| **可信度评分** | 每个 memory 标注 high / medium / low |
+| **验证日期** | 超过 14 天未验证的 memory 在 resume 时提醒 |
+| **交叉引用** | frontmatter 中的 `related` 字段将 memory 连成图 |
+| **弃用协议** | 过时 memory 标 `deprecated: true` + 原因，从索引移除但保留文件 |
 
 ---
 

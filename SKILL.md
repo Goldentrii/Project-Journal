@@ -1,20 +1,44 @@
 ---
 name: project-journal
 description: >-
-  Two-layer AI session memory. Layer 1: hook-driven auto-capture of file
-  edits and errors. Layer 2: full 10-section daily journal on save.
-  Trigger: any natural save phrase ("save", "保存", "checkpoint", "收工",
-  "done for today"). Auto-suggests at session end only. Skip: "don't save"
-  / "skip" / "不用记". Section 9 captures agent observations humans may
-  not notice. Section 10 marks cross-project artifacts for global memory.
+  Two-layer AI session memory with Think-Execute-Reflect quality loop.
+  Layer 1: hook-driven auto-capture. Layer 2: 10-section daily journal.
+  v2.0: Section 7 is now a structured quality loop — Think (research+plan),
+  Execute (plan vs actual), Reflect (5-dimension self-score + external
+  review + Intelligent Distance gap analysis), Feedback (loop or exit).
+  Exit condition: quality passes threshold, no reflection needed.
+  Memory Lifecycle: auto-promotion (3+ journal appearances → permanent
+  memory), confidence scoring (high/medium/low), verification dates,
+  cross-references, deprecation protocol.
   Includes Handoff Protocol for multi-agent pipelines.
-  Designed with the Intelligent Distance principle: one file optimized
-  for both human scanning and agent parsing. Emoji vocabulary provides
-  high-density, low-token semantic markers to reduce communication cost.
+  Designed with Intelligent Distance principle. Emoji vocabulary for
+  high-density, low-token semantic markers.
 origin: community
-version: 1.3.0
+version: 2.0.0
 author: Goldentrii
+platform: clawhub
 tags: [productivity, memory, journal, multi-session, reflection, two-layer, agent-observations, intelligent-distance]
+trigger:
+  - "save"
+  - "save session"
+  - "保存"
+  - "写日志"
+  - "记录"
+  - "/journal"
+  - "checkpoint"
+  - "log this"
+  - "存一下"
+  - "update journal"
+  - "记录一下"
+  - "log today"
+skip:
+  - "don't save"
+  - "skip"
+  - "不用记"
+  - "no journal"
+  - "skip journal"
+  - "no need"
+  - "算了"
 ---
 
 # Project Journal — Agent Instructions
@@ -45,8 +69,13 @@ cold-start brief format, fixed section order, exact file paths,
 honest issues, language match, save-once rule
 
 **⚡ SHOULD** (strong preference, degrade only under pressure):
-Layer 1 capture per turn, emoji status markers, Section 9 observations,
+emoji status markers, Section 9 observations,
 decision record with WHY, descoped items tracking
+
+**💡 Layer 1 is OPTIONAL** (bonus, not expected):
+Layer 1 capture per turn — nice to have, but agent often forgets
+during high-density work. If Layer 1 has 0 entries at save time,
+that's normal — note it in footer, don't treat as failure.
 
 **💡 MAY** (helpful but flexible):
 suggestion timing nuances, reflection depth, index.md auto-repair,
@@ -211,7 +240,7 @@ Layer 1: Quick Capture (hybrid: hook-driven + manual)
 
 Layer 2: Daily Journal
   → Runs when user explicitly saves OR end-of-session
-  → File: journal/YYYY-MM-DD.md (full 10-section report)
+  → File: journal/YYYY-MM-DD.md (full 9-section report)
   → Synthesizes Layer 1 log + conversation context
   → Cost: ~800 tokens to generate, once per day
 ```
@@ -456,18 +485,63 @@ IF not exists → create with JOURNAL TEMPLATE
 
 ---
 
-## 7、反思
+## 7、Think-Execute-Reflect Loop (质量循环)
+
+> **Principle:** Quality comes from structured loops, not from trying harder.
+> Every significant task this session should map to one Think→Execute→Reflect cycle.
+> If everything went perfectly (result = goal), the Reflect section can be one line: "No gap. Goal achieved."
+> The loop is the protocol — the Intelligent Distance fix applied to work quality.
+
+### 7a. 🧠 THINK (before action — was the approach right?)
+
+| Task | Goal (SMART) | Research Done? | Plan | Risks Identified |
+|------|-------------|----------------|------|-----------------|
+| [task] | [measurable result] | [yes/no — what was searched] | [steps taken] | [what could go wrong] |
+
+> If no research was done: flag it. This is the #1 source of wasted work.
+> If no plan existed: note whether the task was exploratory (acceptable) or should have been planned.
+
+### 7b. ⚡ EXECUTE (what actually happened vs what was planned)
+
+| Task | Planned | Actual | Gap |
+|------|---------|--------|-----|
+| [task] | [what was supposed to happen] | [what actually happened] | [difference — or "none"] |
+
+### 7c. 🔍 REFLECT (quality assessment — be objective, not defensive)
 
 **会话质量**: [productive · exploratory · blocked]
 
-**做得好的**:
-- [what worked]
+**Quality score (self-assessed):**
+| Dimension | Score (1-5) | Evidence |
+|-----------|-------------|----------|
+| Research before building | [1-5] | [did I search GitHub/docs/competitors first?] |
+| Plan quality | [1-5] | [was the plan specific enough to execute?] |
+| Execution vs plan alignment | [1-5] | [did I follow the plan or drift?] |
+| Verification before shipping | [1-5] | [did I test/review before calling it done?] |
+| Code quality (if applicable) | [1-5] | [typed, modular, tested?] |
 
-**不确定 / 做了假设**:
-- [what was unclear, what was assumed without verification]
+**External review (if available):**
+- Reviewer: [code-reviewer agent / other agent / tongwu]
+- Score/verdict: [what they said]
+- Issues found: [count and severity]
 
-**下次应注意**:
-- [what to do differently next session]
+**Intelligent Distance gap (if any):**
+- What user meant: [their actual intent]
+- What I interpreted: [my understanding]
+- Gap: [the mismatch, or "none — aligned"]
+
+### 7d. 🔄 FEEDBACK (what changes from this cycle)
+
+**Loop decision:** [EXIT: quality sufficient] or [LOOP: needs iteration]
+
+**If LOOP — what to change:**
+- [ ] [specific change for next iteration]
+
+**Persistent learnings (should this become a memory?):**
+- [ ] [insight] → [if seen 3+ times across sessions, promote to memory/feedback_*.md]
+
+**SOP/rule updates needed:**
+- [ ] [SOP change] → [file path]
 
 **用户关注点变化**:
 - [priority shifts, frustrations, or excitement observed in conversation]
@@ -489,12 +563,13 @@ IF not exists → create with JOURNAL TEMPLATE
 
 ## 9、机器观察 / Agent Observations
 
-> **Intelligent Distance Principle / 智能距离原则**:
->
-> Human and AI intelligence differ in kind, not level. Humans perceive through
-> vision, emotion, and physical intuition. Agents perceive through token streams,
-> file structures, and logical dependencies. This section captures what the
-> agent's perception mode reveals that the human's mode may not.
+> **智能距离原则 (Intelligent Distance)**:
+> Human intelligence and artificial intelligence do not differ in level —
+> they differ in kind. Humans perceive through vision, emotion, and physical
+> intuition. Agents perceive through token streams, file structures, and
+> logical dependencies. These are two fundamentally different modes of
+> understanding the same reality. This section captures what the agent's
+> mode of perception reveals that the human's mode may not.
 >
 > Rules:
 > - Write what YOU noticed, not what you said out loud.
@@ -502,10 +577,10 @@ IF not exists → create with JOURNAL TEMPLATE
 > - If user mentions stress, deadline, or frustration — capture it. Invisible context shapes decisions.
 > - If this observation echoes a previous session's Section 9, mark it with ⏱. Three ⏱ marks = pattern — include in next cold-start brief.
 > - At next session START: surface 🔴 items before asking what to work on.
->
-> Type markers / 类型标记：
-> - 🔧 Technical / 技术：code structure, dependencies, silent errors, state drift, architecture risks
-> - 🧠 Context / 上下文：deadlines, stress signals, priority shifts, user intuition, emotional cues
+
+> 类型标记：
+> - 🔧 技术：代码结构、依赖关系、静默错误、状态漂移、架构风险
+> - 🧠 上下文：截止日期、压力信号、优先级变化、用户直觉、情绪线索
 
 | 类型 | 观察 | 重要性 | 用户是否知道 | 建议行动 |
 |------|------|--------|-------------|----------|
@@ -523,16 +598,20 @@ IF not exists → create with JOURNAL TEMPLATE
 |------|----------|------|------|
 | [artifact name] | [file path — memory/rules/skills] | [concept/feedback/rule] | [one line] |
 
-> Save rules / 保存规则：
-> - Methodology or concept → write to `memory/concept_*.md` + update `MEMORY.md`
-> - Preference or feedback → write to `memory/feedback_*.md` + update `MEMORY.md`
-> - Hard rule → write to `~/.claude/rules/*.md`
-> - No cross-project output → write "None this session / 本次无跨项目输出" (do not leave blank)
->
+> Agent 保存规则：
+> - 如果产出是方法论/概念 → 写入 `memory/concept_*.md` + 更新 `MEMORY.md`
+> - 如果产出是工作偏好/反馈 → 写入 `memory/feedback_*.md` + 更新 `MEMORY.md`
+> - 如果产出是硬性规则 → 写入 `~/.claude/rules/*.md`
+> - 如果没有跨项目产出 → 写"本次无跨项目输出"，不留空
+
 > Examples:
-> - "Agent Five Pillars framework" → `memory/concept_agent_five_pillars.md` (methodology)
-> - "Browser operation preference: opencli > open > MCP" → `~/.claude/rules/core-operations.md` (rule)
-> - "Research-first development principle" → `memory/feedback_research_first.md` (feedback)
+> - 🔧 "Project is more complete than user realizes — admin/dashboard already existed"
+> - 🔧 "Mock data is silently returning 200, user may think real API is working"
+> - 🔧 "Decision made in session 1 now contradicts current direction"
+> - 🔧 "User's mental model of how X works doesn't match the actual implementation"
+> - 🧠 "This 🔴 task has appeared 3 sessions without progress — likely actually blocked"
+> - 🧠 "User said 'feels off' about the auth flow — no errors yet, but worth investigating"
+> - 🧠 "User mentioned needing to ship by Thursday — deadline not tracked anywhere else"
 
 ---
 *保存时间: {YYYY-MM-DD HH:MM} · 质量: [productive/exploratory/blocked]*
@@ -544,6 +623,8 @@ project: {project-name}
 date: {YYYY-MM-DD}
 momentum: green/yellow/red  (text form of 🟢/🟡/🔴)
 quality: productive/exploratory/blocked
+milestone: true/false  (true = breakthrough day — direction change, new capability unlocked, methodology shift)
+okr_linkage: [{which KR this session advanced: KR1/KR2/KR3/none}]
 blockers: [{blocker-1}, {blocker-2}]
 completed: [{task-1}, {task-2}]
 next_critical: {top-red-task}
@@ -555,6 +636,11 @@ cross_project_artifacts: {N}
 decisions_oldest: {YYYY-MM-DD}
 decisions_newest: {YYYY-MM-DD}
 stale_check_needed: true/false
+quality_scores: {research: N, plan: N, execution: N, verification: N, code: N}
+quality_average: N
+external_review: true/false
+loop_decision: exit/loop
+insights_to_promote: N
 -->
 ```
 
@@ -693,10 +779,10 @@ AFTER this briefing:
 ### Handoff Rules
 
 1. **Handoff file** → `journal/handoff-{date}-{source}-to-{target}.md`
-2. **Context field** = minimum info the receiver MUST know, not full history
-3. **Input materials** = exact file paths, not "read the journal"
-4. **Acceptance criteria** = SMART (measurable), not "make it better"
-5. **Source agent does NOT prescribe How** — define What and Done criteria only, let receiver choose path
+2. **上下文 field** = 接收方 **必须知道的最少信息**，不是完整历史
+3. **输入材料** = 具体文件路径，不是"看一下 journal"
+4. **验收标准** = SMART（可衡量），不是"做好一点"
+5. **来源 agent 不规定 How** — 只定义 What 和 Done 标准，让接收方自己选路径
 6. After handoff, source agent writes Section 9 observation about what it couldn't finish and why
 
 ---
@@ -708,13 +794,16 @@ AFTER this briefing:
 | Exact paths | `app/api/research/route.ts` not "the research file" |
 | Honest issues | Section 4: if broken, write it. No hiding. |
 | Real decisions | Section 6: WHY not just WHAT + common misreads |
-| Decision format | Short decisions use table rows; long decisions (any field >30 tokens) use key-value format. Prevents column misalignment in wide tables. |
+| Decision format | 短决策用表格行，长决策（任意字段 >30 tokens）用键值对。避免 agent 在宽表格中列错位。 |
 | Actionable todos | Every 🔴 must be doable in one session |
 | Track repetition | Count sessions a 🔴 appears. ⏱3+ = flag as likely blocked. |
-| Track descoped items | Descoped tasks go in Section 5 "已放弃" + Section 6 decision record. Never silently disappear. |
-| Real reflection | Section 7 is mandatory. Write something true. |
+| Track descoped items | 任务被主动放弃时，记录在 Section 5 "已放弃" 区 + Section 6决策记录。不允许静默消失。 |
+| Real reflection | Section 7 is a structured loop (Think→Execute→Reflect→Feedback), not a flat list. If quality is perfect, Reflect can be one line. |
+| Quality self-score | Section 7c: score 5 dimensions 1-5. Be honest — this is for calibration, not performance review. |
+| Promotion rule | If a Section 7d insight appears 3+ times across sessions, promote it to a permanent memory (feedback_*.md). |
+| Loop or exit | Section 7d must explicitly say EXIT or LOOP. No ambiguous endings. |
 | Agent observations | Section 9: write what you noticed, not what you said. |
-| Cold-start brief | Structured table (项目/大图/上次做了/下一步/动量) + optional ⏱模式 row. Written for zero-context agent. |
+| Cold-start brief | Structured table (项目/上次做了/下一步/动量) + optional ⏱模式 row. Written for zero-context agent. |
 | One file/day | Multiple sessions → update same daily file |
 | Language match | Follow user's language throughout |
 | Layer 1 first | Check -log.md before reconstructing from memory |
@@ -722,10 +811,94 @@ AFTER this briefing:
 | Report once | Session-start briefing happens ONCE. Never repeat mid-session. |
 | Trust intuition | User's "feels wrong" = 🔴 in Section 9. Don't dismiss without error logs. |
 | Capture invisible context | Deadlines, stress, priority shifts mentioned in passing → Section 9. |
-| Machine summary | Footer `<!-- MACHINE-READABLE SUMMARY -->` must be filled. Use green/yellow/red for momentum (text form of emoji). |
+| Machine summary | 日志末尾的 `<!-- MACHINE-READABLE SUMMARY -->` 必须填充。momentum 用 green/yellow/red（emoji 的文字形式）。 |
 | Emoji consistency | Always use emoji from the Emoji Vocabulary table. Never substitute text for emoji status markers. |
 | Decision chain | Section 6: every decision must have a `源自` field — either a date reference to an upstream decision, or "new". |
 | Cross-project check | Before saving: if session produced methodology, preferences, or rules applicable beyond this project → Section 10 + write to global memory/rules. |
 | Handoff when needed | If work is being passed to a different agent role → generate HANDOFF PROTOCOL file, not just a journal entry. |
 | Stale decision alert | Resume protocol: if `decisions_oldest` is >7 days old, mention it once: "有些决策是 N 天前做的，context 可能已变。" |
-| Layer 1 hybrid | Layer 1 should combine hook-driven auto-capture (file edits, errors) with manual Q&A capture. If Layer 1 has 0 entries at save time, note it in Section 7 reflection. |
+| Layer 1 hybrid | Layer 1 combines hook-driven auto-capture with manual Q&A capture. Layer 1 is OPTIONAL — if 0 entries at save time, note in footer. Not a failure. |
+| Milestone marking | In MACHINE-READABLE SUMMARY: set `milestone: true` only for breakthrough days (direction change, new capability, methodology shift). Default false. |
+
+---
+
+## MEMORY LIFECYCLE — How Memories are Born, Live, and Die
+
+> Memories are not write-once. They have a lifecycle: created → verified → updated → maybe deprecated.
+> This section defines the rules for managing memory quality over time.
+
+### Memory Creation (when journal saves)
+
+**Auto-promotion rule:** During Section 7d (Feedback), if an insight has appeared 3+ times across sessions:
+```
+Check: has this insight appeared in previous journals' Section 7?
+  IF count ≥ 3: PROMOTE to permanent memory
+    → Write to memory/feedback_*.md or memory/concept_*.md
+    → Update MEMORY.md index
+    → In journal, note: "🔺 Promoted to memory: [filename]"
+  IF count < 3: keep in journal only
+    → In journal, note the count: "⏱ Seen N times"
+```
+
+### Memory Metadata
+
+Every memory file should have these frontmatter fields:
+```yaml
+---
+name: [descriptive name]
+description: [one-line — used for relevance matching]
+type: user | feedback | project | reference | concept
+confidence: high | medium | low
+last_verified: YYYY-MM-DD
+related: [list of other memory filenames]
+---
+```
+
+- **confidence: high** — verified by external review, testing, or user confirmation
+- **confidence: medium** — based on observation, not yet externally verified
+- **confidence: low** — hypothesis or assumption, needs validation
+- **last_verified** — date when this memory was last confirmed still accurate
+- **related** — cross-references to other memory files (enables graph navigation)
+
+### Memory Verification (on resume)
+
+During Resume Protocol, when reading memories:
+```
+FOR EACH memory referenced in MEMORY.md:
+  IF last_verified is > 14 days ago:
+    → Flag once: "📋 [memory name] hasn't been verified in N days"
+    → Don't delete — just flag for human awareness
+  IF confidence is "low":
+    → Mention in cold-start brief: "有一个未验证的假设: [name]"
+```
+
+### Memory Deprecation
+
+A memory should be deprecated (not deleted) when:
+1. The underlying fact has changed (e.g., API endpoint moved)
+2. A newer memory contradicts it
+3. The project it describes is no longer active
+
+```yaml
+# Deprecated memory — add to frontmatter:
+deprecated: true
+deprecated_reason: "Superseded by [newer_memory.md]"
+deprecated_date: YYYY-MM-DD
+```
+
+Deprecated memories stay in the file system (for history) but are removed from MEMORY.md index.
+
+### Memory Graph (optional — for advanced use)
+
+The `related` field in frontmatter creates an implicit graph:
+```
+concept_intelligent_distance.md
+  → related: [feedback_100_percent_replication.md, feedback_why_what_how_gap.md]
+
+feedback_why_what_how_gap.md
+  → related: [concept_intelligent_distance.md, concept_agent_five_pillars.md]
+```
+
+When reading one memory, the agent can follow `related` links to build a richer understanding.
+This is NOT mandatory — it's a "use when helpful" feature.
+| OKR linkage | In MACHINE-READABLE SUMMARY: set `okr_linkage` to the KR(s) this session advanced. Helps weekly summary correlate daily work to goals. |
