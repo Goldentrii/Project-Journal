@@ -1,5 +1,5 @@
 ---
-name: project-journal
+name: agent-recall
 description: >-
   Two-layer AI session memory with Think-Execute-Reflect quality loop.
   Layer 1: hook-driven auto-capture. Layer 2: 10-section daily journal.
@@ -41,7 +41,7 @@ skip:
   - "算了"
 ---
 
-# Project Journal — Agent Instructions
+# AgentRecall — Agent Instructions
 
 > Read completely before acting. Two systems: QUICK CAPTURE and DAILY JOURNAL.
 

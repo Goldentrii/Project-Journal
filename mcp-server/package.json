@@ -1,11 +1,11 @@
 {
-  "name": "project-journal-mcp",
+  "name": "agent-recall-mcp",
   "version": "1.0.0",
   "description": "Two-layer AI session memory — read, write, and navigate project journals via MCP",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "project-journal-mcp": "dist/index.js"
+    "agent-recall-mcp": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -17,7 +17,7 @@
     "journal",
     "ai-memory",
     "session-memory",
-    "project-journal"
+    "agent-recall"
   ],
   "license": "MIT",
   "dependencies": {

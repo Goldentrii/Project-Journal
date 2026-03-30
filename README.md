@@ -1,9 +1,9 @@
-# Project Journal — AI Session Memory with Quality Loops
+# AgentRecall — AI Session Memory with Quality Loops
 
 > **Give your AI agent a brain that survives every session.**
 > Built on the **Intelligent Distance** principle — not making AI more human, but designing protocols that minimize information loss between human and AI intelligence.
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue?style=flat-square)](https://github.com/Goldentrii/Project-Journal)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue?style=flat-square)](https://github.com/Goldentrii/AgentRecall)
 [![License](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/platform-Claude_Code-orange?style=flat-square)](https://claude.ai/code)
 [![MCP](https://img.shields.io/badge/MCP-Server-5B2D8E?style=flat-square)](#mcp-server)
@@ -38,8 +38,8 @@ Session N: Complete memory — every decision with WHY, quality tracked
 ### Option 1: Skill (Claude Code)
 
 ```bash
-mkdir -p ~/.claude/skills/project-journal
-curl -o ~/.claude/skills/project-journal/SKILL.md https://raw.githubusercontent.com/Goldentrii/Project-Journal/main/SKILL.md
+mkdir -p ~/.claude/skills/agent-recall
+curl -o ~/.claude/skills/agent-recall/SKILL.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/SKILL.md
 ```
 
 Then say **"save"** at the end of any session. Say **"read the latest journal"** to resume.
@@ -48,14 +48,14 @@ Then say **"save"** at the end of any session. Say **"read the latest journal"**
 
 ```bash
 # Claude Code
-claude mcp add project-journal -- npx -y project-journal-mcp
+claude mcp add agent-recall -- npx -y agent-recall-mcp
 
 # Cursor — add to .cursor/mcp.json
 {
   "mcpServers": {
-    "project-journal": {
+    "agent-recall": {
       "command": "npx",
-      "args": ["-y", "project-journal-mcp"]
+      "args": ["-y", "agent-recall-mcp"]
     }
   }
 }
@@ -63,9 +63,9 @@ claude mcp add project-journal -- npx -y project-journal-mcp
 # VS Code — add to .vscode/mcp.json
 {
   "servers": {
-    "project-journal": {
+    "agent-recall": {
       "command": "npx",
-      "args": ["-y", "project-journal-mcp"]
+      "args": ["-y", "agent-recall-mcp"]
     }
   }
 }
@@ -242,7 +242,7 @@ Validated over **20+ sessions** across production projects:
 
 This skill improves through use and feedback:
 
-1. **Install & use** for a week → [report what works and what's missing](https://github.com/Goldentrii/Project-Journal/issues)
+1. **Install & use** for a week → [report what works and what's missing](https://github.com/Goldentrii/AgentRecall/issues)
 2. **Suggest improvements** to the quality loop or memory lifecycle
 3. **Share (anonymized) journal examples** to help improve the format
 4. **Build adapters** for new agents

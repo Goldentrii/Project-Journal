@@ -1,9 +1,9 @@
-# project-journal SDK — Architecture & Package Design
+# agent-recall SDK — Architecture & Package Design
 
 > **Status**: Design Draft v0.1 · Author: Goldentrii · Date: 2026-03-24
 >
 > This document defines the SDK that lets any developer — regardless of AI tool —
-> integrate project-journal into their workflow. "SDK is a must." — tongwu
+> integrate agent-recall into their workflow. "SDK is a must." — tongwu
 
 ---
 
@@ -38,10 +38,10 @@ MCP server — one storage format, three access layers:
 
 ## Package Structure
 
-### Python package: `project-journal`
+### Python package: `agent-recall`
 
 ```
-pip install project-journal
+pip install agent-recall
 ```
 
 **Namespace**: `project_journal`
@@ -70,14 +70,14 @@ sessions = j.list()           # list all entries
 results = j.search("Clerk")   # full-text search
 ```
 
-### Node.js package: `project-journal`
+### Node.js package: `agent-recall`
 
 ```
-npm install project-journal
+npm install agent-recall
 ```
 
 ```typescript
-import { Journal } from 'project-journal'
+import { Journal } from 'agent-recall'
 
 const j = new Journal()                    // auto-detect project
 const j = new Journal({ project: 'taskflow' })
@@ -114,9 +114,9 @@ pj list --project taskflow   # specific project
 pj search "Clerk"            # full-text search
 
 # Setup
-pj init                      # initialize project-journal for current repo
+pj init                      # initialize agent-recall for current repo
 pj projects                  # list all tracked projects
-pj migrate                   # migrate from ~/.claude/skills/project-journal/journal/
+pj migrate                   # migrate from ~/.claude/skills/agent-recall/journal/
 
 # MCP server
 pj mcp                       # start the MCP server (stdio)
@@ -132,7 +132,7 @@ pj mcp --http --port 4040    # start HTTP MCP server
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `project` | `string` | auto-detected | Project slug |
-| `root` | `string` | `~/.project-journal` | Journal root directory |
+| `root` | `string` | `~/.agent-recall` | Journal root directory |
 | `language` | `"en" \| "zh" \| "auto"` | `"auto"` | Journal language |
 
 ### Methods
@@ -179,7 +179,7 @@ interface JournalEntry {
 raw Layer 1 log from the current session and uses a prompt template to generate
 the full 9-section journal.
 
-This requires an AI provider configured in `~/.project-journal/config.json`:
+This requires an AI provider configured in `~/.agent-recall/config.json`:
 
 ```json
 {
@@ -205,23 +205,23 @@ non-Claude Code environments.
 ### Python
 
 ```bash
-pip install project-journal
-pj init              # creates ~/.project-journal/ and links current repo
+pip install agent-recall
+pj init              # creates ~/.agent-recall/ and links current repo
 ```
 
 ### Node.js
 
 ```bash
-npm install -g project-journal     # global for CLI
-npm install project-journal        # local for API use in projects
+npm install -g agent-recall     # global for CLI
+npm install agent-recall        # local for API use in projects
 pj init
 ```
 
 ### From source (development)
 
 ```bash
-git clone https://github.com/Goldentrii/project-journal
-cd project-journal
+git clone https://github.com/Goldentrii/agent-recall
+cd agent-recall
 
 # Python
 cd sdk/python && pip install -e ".[dev]"
@@ -235,7 +235,7 @@ cd sdk/node && npm install && npm link
 ## Monorepo Structure (implementation target)
 
 ```
-project-journal/                     ← GitHub repo root
+agent-recall/                     ← GitHub repo root
 ├── README.md                        ← main README (already done)
 ├── SKILL.md                         ← Claude Code skill (already done)
 │
@@ -259,7 +259,7 @@ project-journal/                     ← GitHub repo root
 │       └── tests/
 │
 ├── mcp/
-│   ├── package.json                 ← project-journal-mcp
+│   ├── package.json                 ← agent-recall-mcp
 │   └── src/
 │       ├── server.ts                ← MCP server (see mcp-adapter-spec.md)
 │       └── tools.ts
@@ -268,7 +268,7 @@ project-journal/                     ← GitHub repo root
 │   ├── mcp-adapter-spec.md          ← (this file's sibling)
 │   └── sdk-design.md                ← this file
 │
-└── journal/                         ← project-journal's own journal (dogfooding)
+└── journal/                         ← agent-recall's own journal (dogfooding)
     ├── index.md
     └── 2026-03-24.md
 ```
@@ -280,9 +280,9 @@ project-journal/                     ← GitHub repo root
 | Layer | Package | Version | Release |
 |-------|---------|---------|---------|
 | Claude Code skill | `SKILL.md` | 1.0.0 | Manual copy / clawhub.ai |
-| Python SDK | `project-journal` on PyPI | 0.1.0 | `pip install project-journal` |
-| Node SDK | `project-journal` on npm | 0.1.0 | `npm install project-journal` |
-| MCP server | `project-journal-mcp` on npm | 0.1.0 | `npx project-journal-mcp` |
+| Python SDK | `agent-recall` on PyPI | 0.1.0 | `pip install agent-recall` |
+| Node SDK | `agent-recall` on npm | 0.1.0 | `npm install agent-recall` |
+| MCP server | `agent-recall-mcp` on npm | 0.1.0 | `npx agent-recall-mcp` |
 
 All packages share the same version number. Releases are tagged `v{version}` on GitHub.
 
@@ -293,11 +293,11 @@ All packages share the same version number. Releases are tagged `v{version}` on 
 ```
 Phase 1 (v0.1) — Core CLI
 ├── Python: pj read, pj capture, pj list, pj brief
-├── Storage: ~/.project-journal/ layout
+├── Storage: ~/.agent-recall/ layout
 └── Migration: pj migrate (import existing SKILL.md journals)
 
 Phase 2 (v0.2) — MCP Server
-├── Node: project-journal-mcp (stdio transport)
+├── Node: agent-recall-mcp (stdio transport)
 ├── Tools: journal_read, journal_write, journal_capture, journal_list
 └── IDE configs: .cursor/mcp.json, .windsurf/mcp.json templates
 
@@ -319,8 +319,8 @@ Phase 4 (v1.0) — Production Ready
 
 | # | Question | Lean | Notes |
 |---|----------|------|-------|
-| 1 | Single PyPI name `project-journal` or scoped `goldentrii-project-journal`? | Unscoped | More discoverable; claim early |
+| 1 | Single PyPI name `agent-recall` or scoped `goldentrii-agent-recall`? | Unscoped | More discoverable; claim early |
 | 2 | Python-first or Node-first for v0.1? | Python | Broader data/ML audience; `pip install` is what tongwu mentioned |
 | 3 | AI save: require API key or use local LLM (Ollama)? | Optional both | API key for cloud, Ollama for local-only users |
 | 4 | `pj` CLI name conflict? | Low risk | Check npm + PyPI before publishing |
-| 5 | dogfood: use project-journal to track project-journal development? | Yes | Demonstrates the tool, validates the workflow |
+| 5 | dogfood: use agent-recall to track agent-recall development? | Yes | Demonstrates the tool, validates the workflow |

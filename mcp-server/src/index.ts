@@ -14,8 +14,8 @@ import { execSync } from "node:child_process";
 
 const VERSION = "1.0.0";
 const JOURNAL_ROOT =
-  process.env.PROJECT_JOURNAL_ROOT ||
-  path.join(os.homedir(), ".project-journal");
+  process.env.AGENT_RECALL_ROOT ||
+  path.join(os.homedir(), ".agent-recall");
 const LEGACY_ROOT = path.join(os.homedir(), ".claude", "projects");
 
 const SECTION_HEADERS: Record<string, string> = {
@@ -39,14 +39,14 @@ const args = process.argv.slice(2);
 
 if (args.includes("--help") || args.includes("-h")) {
   process.stdout.write(
-    `project-journal-mcp v${VERSION}
+    `agent-recall-mcp v${VERSION}
 
 Two-layer AI session memory — read, write, and navigate project journals via MCP.
 
 Usage:
-  npx project-journal-mcp            Start the MCP server (stdio transport)
-  npx project-journal-mcp --help     Show this help
-  npx project-journal-mcp --list-tools  List available MCP tools
+  npx agent-recall-mcp            Start the MCP server (stdio transport)
+  npx agent-recall-mcp --help     Show this help
+  npx agent-recall-mcp --list-tools  List available MCP tools
 
 Storage: ${JOURNAL_ROOT}
 Legacy:  ${LEGACY_ROOT}
@@ -89,8 +89,8 @@ function todayISO(): string {
  */
 function detectProject(): string {
   // 1. Env var
-  if (process.env.PROJECT_JOURNAL_PROJECT) {
-    return process.env.PROJECT_JOURNAL_PROJECT;
+  if (process.env.AGENT_RECALL_PROJECT) {
+    return process.env.AGENT_RECALL_PROJECT;
   }
 
   // 2. Git repo name
@@ -471,7 +471,7 @@ function resolveProject(project: string | undefined): string {
 // ---------------------------------------------------------------------------
 
 const server = new McpServer({
-  name: "project-journal",
+  name: "agent-recall",
   version: VERSION,
 });
 
@@ -494,7 +494,7 @@ server.registerTool("journal_read", {
       .string()
       .default("auto")
       .describe(
-        "Project slug (directory name under ~/.project-journal/projects/). Defaults to current git repo name."
+        "Project slug (directory name under ~/.agent-recall/projects/). Defaults to current git repo name."
       ),
     section: z
       .enum([
@@ -754,7 +754,7 @@ server.registerTool("journal_list", {
 
 server.registerTool("journal_projects", {
   title: "List Projects",
-  description: "List all projects tracked by project-journal on this machine.",
+  description: "List all projects tracked by agent-recall on this machine.",
   inputSchema: {},
 }, async () => {
   const projects = listAllProjects();
@@ -879,12 +879,12 @@ server.registerTool("journal_search", {
 // Resource: project index
 server.registerResource(
   "Journal Index",
-  new ResourceTemplate("project-journal://{project}/index", {
+  new ResourceTemplate("agent-recall://{project}/index", {
     list: async () => {
       const projects = listAllProjects();
       return {
         resources: projects.map((p) => ({
-          uri: `project-journal://${p.slug}/index`,
+          uri: `agent-recall://${p.slug}/index`,
           name: `${p.slug} — Journal Index`,
           mimeType: "text/markdown",
         })),
@@ -916,7 +916,7 @@ server.registerResource(
 // Resource: specific date entry
 server.registerResource(
   "Journal Entry",
-  new ResourceTemplate("project-journal://{project}/{date}", {
+  new ResourceTemplate("agent-recall://{project}/{date}", {
     list: async () => {
       const projects = listAllProjects();
       const resources: Array<{
@@ -928,7 +928,7 @@ server.registerResource(
         const entries = listJournalFiles(p.slug).slice(0, 5);
         for (const e of entries) {
           resources.push({
-            uri: `project-journal://${p.slug}/${e.date}`,
+            uri: `agent-recall://${p.slug}/${e.date}`,
             name: `${p.slug} — ${e.date}`,
             mimeType: "text/markdown",
           });
