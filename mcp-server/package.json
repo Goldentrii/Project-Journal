@@ -1,25 +1,47 @@
 {
   "name": "agent-recall-mcp",
   "version": "1.0.0",
-  "description": "Two-layer AI session memory — read, write, and navigate project journals via MCP",
+  "description": "AI session memory with Think-Execute-Reflect quality loops — give your agent a brain that survives every session",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "agent-recall-mcp": "dist/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node -e \"require('fs').chmodSync('dist/index.js', '755')\"",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build",
     "start": "node dist/index.js",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "test": "node --test test/basics.test.mjs"
   },
   "keywords": [
     "mcp",
-    "journal",
+    "mcp-server",
+    "model-context-protocol",
+    "agent-recall",
     "ai-memory",
     "session-memory",
-    "agent-recall"
+    "journal",
+    "ai-agents",
+    "claude-code",
+    "cursor",
+    "intelligent-distance",
+    "quality-loop",
+    "think-execute-reflect",
+    "agent-memory",
+    "cold-start"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Goldentrii/AgentRecall.git",
+    "directory": "mcp-server"
+  },
+  "homepage": "https://github.com/Goldentrii/AgentRecall#mcp-server",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.28.0"
   },

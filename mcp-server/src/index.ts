@@ -6,7 +6,10 @@ import * as z from "zod/v4";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import { execSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -86,52 +89,52 @@ function todayISO(): string {
 
 /**
  * Auto-detect project slug from environment, git, or cwd.
+ * Async to avoid blocking the event loop.
  */
-function detectProject(): string {
+let _cachedProject: string | null = null;
+
+async function detectProject(): Promise<string> {
+  if (_cachedProject) return _cachedProject;
+
   // 1. Env var
   if (process.env.AGENT_RECALL_PROJECT) {
-    return process.env.AGENT_RECALL_PROJECT;
+    _cachedProject = process.env.AGENT_RECALL_PROJECT;
+    return _cachedProject;
   }
 
-  // 2. Git repo name
+  // 2. Git repo name (async)
   try {
-    const remote = execSync("git config --get remote.origin.url", {
-      encoding: "utf-8",
-      timeout: 3000,
-      stdio: ["pipe", "pipe", "pipe"],
-    }).trim();
+    const { stdout } = await execFileAsync("git", ["config", "--get", "remote.origin.url"], { timeout: 3000 });
+    const remote = stdout.trim();
     if (remote) {
       const name = path.basename(remote, ".git");
-      if (name) return name;
+      if (name) { _cachedProject = name; return name; }
     }
   } catch {
-    // Not a git repo or git not available — try repo root basename
     try {
-      const root = execSync("git rev-parse --show-toplevel", {
-        encoding: "utf-8",
-        timeout: 3000,
-        stdio: ["pipe", "pipe", "pipe"],
-      }).trim();
-      if (root) return path.basename(root);
+      const { stdout } = await execFileAsync("git", ["rev-parse", "--show-toplevel"], { timeout: 3000 });
+      const root = stdout.trim();
+      if (root) { _cachedProject = path.basename(root); return _cachedProject; }
     } catch {
       // fall through
     }
   }
 
-  // 3. package.json or pyproject.toml name
+  // 3. package.json name
   const cwd = process.cwd();
   const pkgPath = path.join(cwd, "package.json");
   if (fs.existsSync(pkgPath)) {
     try {
       const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-      if (pkg.name) return pkg.name.replace(/^@[^/]+\//, "");
+      if (pkg.name) { _cachedProject = pkg.name.replace(/^@[^/]+\//, "") as string; return _cachedProject!; }
     } catch {
       // fall through
     }
   }
 
   // 4. Basename of cwd
-  return path.basename(cwd);
+  _cachedProject = path.basename(cwd);
+  return _cachedProject;
 }
 
 /**
@@ -255,12 +258,14 @@ function extractSection(content: string, section: string): string | null {
   const idx = content.indexOf(header);
   if (idx === -1) return null;
 
-  // Find the next ## header
+  // Find the next ## header (respecting code fences)
   const afterHeader = content.slice(idx);
   const lines = afterHeader.split("\n");
   const result: string[] = [lines[0]];
+  let inCodeFence = false;
   for (let i = 1; i < lines.length; i++) {
-    if (lines[i].startsWith("## ")) break;
+    if (lines[i].startsWith("```")) inCodeFence = !inCodeFence;
+    if (!inCodeFence && lines[i].startsWith("## ")) break;
     result.push(lines[i]);
   }
 
@@ -459,9 +464,9 @@ function listAllProjects(): Array<{
 /**
  * Resolve "auto" project to actual slug.
  */
-function resolveProject(project: string | undefined): string {
+async function resolveProject(project: string | undefined): Promise<string> {
   if (!project || project === "auto") {
-    return detectProject();
+    return await detectProject();
   }
   return project;
 }
@@ -516,7 +521,7 @@ server.registerTool("journal_read", {
       ),
   },
 }, async ({ date, project, section }) => {
-  const slug = resolveProject(project);
+  const slug = await resolveProject(project);
   let targetDate = date;
 
   if (targetDate === "latest") {
@@ -600,7 +605,7 @@ server.registerTool("journal_write", {
       .describe("Project slug. Defaults to auto-detect."),
   },
 }, async ({ content, section, project }) => {
-  const slug = resolveProject(project);
+  const slug = await resolveProject(project);
   const date = todayISO();
   const dir = journalDir(slug);
   ensureDir(dir);
@@ -665,7 +670,7 @@ server.registerTool("journal_capture", {
       .describe("Project slug. Defaults to auto-detect."),
   },
 }, async ({ question, answer, tags, project }) => {
-  const slug = resolveProject(project);
+  const slug = await resolveProject(project);
   const date = todayISO();
   const dir = journalDir(slug);
   ensureDir(dir);
@@ -719,7 +724,7 @@ server.registerTool("journal_list", {
       .describe("Return the N most recent entries. 0 = all."),
   },
 }, async ({ project, limit }) => {
-  const slug = resolveProject(project);
+  const slug = await resolveProject(project);
   let entries = listJournalFiles(slug);
 
   if (limit > 0) {
@@ -795,7 +800,7 @@ server.registerTool("journal_search", {
       .describe("Limit search to a specific section type."),
   },
 }, async ({ query, project, section }) => {
-  const slug = resolveProject(project);
+  const slug = await resolveProject(project);
   const dirs = journalDirs(slug);
   const queryLower = query.toLowerCase();
 
