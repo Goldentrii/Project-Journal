@@ -1,6 +1,6 @@
 {
   "name": "agent-recall-mcp",
-  "version": "2.1.3",
+  "version": "2.1.1",
   "description": "AI session memory with Think-Execute-Reflect quality loops — give your agent a brain that survives every session",
   "type": "module",
   "main": "dist/index.js",

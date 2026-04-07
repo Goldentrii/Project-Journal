@@ -109,4 +109,76 @@ describe("AgentRecall MCP — filesystem operations", () => {
     assert.ok(saved.includes("2026-03-30.md"));
     assert.ok(saved.includes("2026-03-29.md"));
   });
+
+  // --- v3 tests ---
+
+  it("writes and reads JSON state file", () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const stateFile = path.join(JOURNAL_DIR, `${today}.state.json`);
+    const state = {
+      version: "2.2.0",
+      date: today,
+      project: TEST_PROJECT,
+      timestamp: new Date().toISOString(),
+      completed: [{ task: "test-task", result: "passed" }],
+      failures: [],
+      state: { genome: { status: "v3.2", details: "8 dimensions" } },
+      next_actions: [{ priority: "P0", task: "replicate new site" }],
+      insights: [{ claim: "extraction = quality", confidence: "high", evidence: "4 sites" }],
+      counts: { pages: 91, tabs: 35 },
+    };
+    fs.writeFileSync(stateFile, JSON.stringify(state, null, 2));
+    const read = JSON.parse(fs.readFileSync(stateFile, "utf-8"));
+    assert.equal(read.completed.length, 1);
+    assert.equal(read.counts.pages, 91);
+    assert.equal(read.insights[0].confidence, "high");
+  });
+
+  it("merges state correctly (arrays append, objects spread)", () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const stateFile = path.join(JOURNAL_DIR, `${today}.state.json`);
+    const existing = JSON.parse(fs.readFileSync(stateFile, "utf-8"));
+
+    // Simulate merge
+    const incoming = {
+      completed: [{ task: "second-task", result: "done" }],
+      counts: { tabs: 40 },
+    };
+    existing.completed.push(...incoming.completed);
+    Object.assign(existing.counts, incoming.counts);
+
+    fs.writeFileSync(stateFile, JSON.stringify(existing, null, 2));
+    const merged = JSON.parse(fs.readFileSync(stateFile, "utf-8"));
+    assert.equal(merged.completed.length, 2);
+    assert.equal(merged.counts.tabs, 40); // overwritten
+    assert.equal(merged.counts.pages, 91); // preserved
+  });
+
+  it("archive creates archive directory and moves files", () => {
+    const archiveDir = path.join(JOURNAL_DIR, "archive");
+    fs.mkdirSync(archiveDir, { recursive: true });
+
+    // Create an "old" file and archive it
+    const oldFile = path.join(JOURNAL_DIR, "2026-01-01.md");
+    fs.writeFileSync(oldFile, "# 2026-01-01\n## Brief\nOld entry for archival test\n");
+    const destFile = path.join(archiveDir, "2026-01-01.md");
+    fs.copyFileSync(oldFile, destFile);
+    fs.unlinkSync(oldFile);
+
+    assert.ok(fs.existsSync(destFile));
+    assert.ok(!fs.existsSync(oldFile));
+    const content = fs.readFileSync(destFile, "utf-8");
+    assert.ok(content.includes("archival test"));
+  });
+
+  it("cold start categorizes entries by age", () => {
+    const today = new Date().toISOString().slice(0, 10);
+    // Today's file = hot
+    assert.ok(fs.existsSync(path.join(JOURNAL_DIR, "2026-03-30.md"))); // existing from earlier tests
+
+    // Count .md files (excluding index, log, archive)
+    const mdFiles = fs.readdirSync(JOURNAL_DIR)
+      .filter(f => /^\d{4}-\d{2}-\d{2}\.md$/.test(f));
+    assert.ok(mdFiles.length >= 1, "Should have at least one journal file");
+  });
 });

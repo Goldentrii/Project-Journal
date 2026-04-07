@@ -15,7 +15,7 @@ const execFileAsync = promisify(execFile);
 // Constants
 // ---------------------------------------------------------------------------
 
-const VERSION = "2.1.3";
+const VERSION = "2.1.1";
 const JOURNAL_ROOT =
   process.env.AGENT_RECALL_ROOT ||
   path.join(os.homedir(), ".agent-recall");
@@ -71,6 +71,9 @@ if (args.includes("--list-tools")) {
     { name: "alignment_check", description: "Record confidence + understanding + human corrections" },
     { name: "nudge", description: "Surface contradiction between current and past input" },
     { name: "context_synthesize", description: "L3 synthesis: patterns, contradictions, goal evolution" },
+    { name: "journal_state", description: "Layer 1 JSON state: read/write structured session data (v3)" },
+    { name: "journal_cold_start", description: "Cache-aware cold start: hot/warm/cold entries (v3)" },
+    { name: "journal_archive", description: "Archive old entries to cold storage (v3)" },
   ];
   process.stdout.write(JSON.stringify(tools, null, 2) + "\n");
   process.exit(0);
@@ -1171,6 +1174,269 @@ server.registerTool("context_synthesize", {
 
   return {
     content: [{ type: "text" as const, text: JSON.stringify({ project: slug, entries_analyzed: toRead.length, synthesis: syn }) }],
+  };
+});
+
+// ---------------------------------------------------------------------------
+// Tool: journal_state — Layer 1 JSON state (v3 architecture)
+// ---------------------------------------------------------------------------
+
+interface SessionState {
+  version: string;
+  date: string;
+  project: string;
+  timestamp: string;
+  completed: Array<{ task: string; result: string; files_changed?: string[] }>;
+  failures: Array<{ task: string; what_went_wrong: string; root_cause: string; fixed: boolean }>;
+  state: Record<string, { status: string; details: string }>;
+  next_actions: Array<{ priority: string; task: string }>;
+  insights: Array<{ claim: string; confidence: string; evidence: string }>;
+  counts: Record<string, number>;
+}
+
+function stateFilePath(project: string, date: string): string {
+  return path.join(journalDir(project), `${date}.state.json`);
+}
+
+function readState(project: string, date: string): SessionState | null {
+  const fp = stateFilePath(project, date);
+  if (!fs.existsSync(fp)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(fp, "utf-8"));
+  } catch {
+    return null;
+  }
+}
+
+server.registerTool("journal_state", {
+  title: "Read/Write Session State (JSON)",
+  description:
+    "Layer 1: structured JSON session state. Faster than markdown for cold-start. " +
+    "Read mode: returns today's state as JSON. Write mode: merges new data into state. " +
+    "Use this for agent-to-agent handoffs — no prose parsing needed.",
+  inputSchema: {
+    action: z.enum(["read", "write"]).describe("'read' returns state, 'write' merges new data"),
+    data: z.string().optional().describe("JSON string to merge into state (write mode only)"),
+    date: z.string().default("latest").describe("ISO date or 'latest'"),
+    project: z.string().default("auto"),
+  },
+}, async ({ action, data, date, project }) => {
+  const slug = await resolveProject(project);
+  let targetDate = date;
+
+  if (targetDate === "latest") {
+    // Find most recent state file
+    const dir = journalDir(slug);
+    if (fs.existsSync(dir)) {
+      const files = fs.readdirSync(dir)
+        .filter(f => f.endsWith(".state.json"))
+        .sort()
+        .reverse();
+      targetDate = files.length > 0 ? files[0].replace(".state.json", "") : todayISO();
+    } else {
+      targetDate = todayISO();
+    }
+  }
+
+  if (action === "read") {
+    const state = readState(slug, targetDate);
+    return {
+      content: [{
+        type: "text" as const,
+        text: JSON.stringify(state ?? { empty: true, date: targetDate, project: slug }),
+      }],
+    };
+  }
+
+  // Write: merge into existing state
+  const existing = readState(slug, todayISO()) ?? {
+    version: VERSION,
+    date: todayISO(),
+    project: slug,
+    timestamp: new Date().toISOString(),
+    completed: [],
+    failures: [],
+    state: {},
+    next_actions: [],
+    insights: [],
+    counts: {},
+  };
+
+  if (data) {
+    try {
+      const incoming = JSON.parse(data);
+      // Merge arrays by appending, objects by spreading
+      if (incoming.completed) existing.completed.push(...incoming.completed);
+      if (incoming.failures) existing.failures.push(...incoming.failures);
+      if (incoming.next_actions) existing.next_actions = incoming.next_actions; // replace, not append
+      if (incoming.insights) existing.insights.push(...incoming.insights);
+      if (incoming.state) Object.assign(existing.state, incoming.state);
+      if (incoming.counts) Object.assign(existing.counts, incoming.counts);
+      existing.timestamp = new Date().toISOString();
+    } catch (e) {
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify({ error: `Invalid JSON: ${e}` }) }],
+        isError: true,
+      };
+    }
+  }
+
+  const fp = stateFilePath(slug, todayISO());
+  ensureDir(path.dirname(fp));
+  fs.writeFileSync(fp, JSON.stringify(existing, null, 2), "utf-8");
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: JSON.stringify({ success: true, date: todayISO(), entries: {
+        completed: existing.completed.length,
+        failures: existing.failures.length,
+        insights: existing.insights.length,
+      }}),
+    }],
+  };
+});
+
+// ---------------------------------------------------------------------------
+// Tool: journal_cold_start — Cache-aware cold start (v3 architecture)
+// ---------------------------------------------------------------------------
+
+server.registerTool("journal_cold_start", {
+  title: "Cold Start Brief (Cache-Aware)",
+  description:
+    "Returns a cache-aware cold-start package. HOT: today + yesterday (full). " +
+    "WARM: 2-7 days (summaries only). COLD: older (count only). " +
+    "Designed for minimal context consumption on session start.",
+  inputSchema: {
+    project: z.string().default("auto"),
+  },
+}, async ({ project }) => {
+  const slug = await resolveProject(project);
+  const entries = listJournalFiles(slug);
+  const today = todayISO();
+
+  const hot: Array<{ date: string; state: SessionState | null; brief: string | null }> = [];
+  const warm: Array<{ date: string; brief: string | null }> = [];
+  let coldCount = 0;
+
+  for (const entry of entries) {
+    const ageMs = Date.now() - new Date(entry.date).getTime();
+    const ageDays = ageMs / (1000 * 60 * 60 * 24);
+
+    if (ageDays <= 1.5) {
+      // HOT: state JSON (fast) + brief from markdown (capped at 5KB to save context)
+      const state = readState(slug, entry.date);
+      const fullPath = path.join(entry.dir, entry.file);
+      const stats = fs.statSync(fullPath);
+      const content = stats.size > 5120
+        ? fs.readFileSync(fullPath, "utf-8").slice(0, 5120) + "\n...(truncated, use journal_read for full)"
+        : fs.readFileSync(fullPath, "utf-8");
+      hot.push({
+        date: entry.date,
+        state,
+        brief: extractSection(content, "brief"),
+      });
+    } else if (ageDays <= 7) {
+      // WARM: brief only (first 2KB of file to extract brief section)
+      const fullPath = path.join(entry.dir, entry.file);
+      const content = fs.readFileSync(fullPath, "utf-8").slice(0, 2048);
+      warm.push({
+        date: entry.date,
+        brief: extractSection(content, "brief"),
+      });
+    } else {
+      // COLD: just count
+      coldCount++;
+    }
+  }
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: JSON.stringify({
+        project: slug,
+        cache: {
+          hot: { count: hot.length, entries: hot },
+          warm: { count: warm.length, entries: warm },
+          cold: { count: coldCount },
+        },
+        total_entries: entries.length,
+        tip: "HOT entries have full state. WARM have briefs only. Use journal_read for COLD entries.",
+      }),
+    }],
+  };
+});
+
+// ---------------------------------------------------------------------------
+// Tool: journal_archive — Move completed sessions to cold storage
+// ---------------------------------------------------------------------------
+
+server.registerTool("journal_archive", {
+  title: "Archive Old Entries",
+  description:
+    "Move entries older than N days to cold archive. Keeps a one-line summary per archived entry. " +
+    "Use after a project milestone or when journal count gets too high.",
+  inputSchema: {
+    older_than_days: z.number().int().default(7).describe("Archive entries older than this many days"),
+    project: z.string().default("auto"),
+  },
+}, async ({ older_than_days, project }) => {
+  const slug = await resolveProject(project);
+  const entries = listJournalFiles(slug);
+  const dir = journalDir(slug);
+  const archiveDir = path.join(dir, "archive");
+  ensureDir(archiveDir);
+
+  let archived = 0;
+  const summaries: string[] = [];
+
+  for (const entry of entries) {
+    const ageMs = Date.now() - new Date(entry.date).getTime();
+    const ageDays = ageMs / (1000 * 60 * 60 * 24);
+
+    if (ageDays > older_than_days) {
+      const srcPath = path.join(entry.dir, entry.file);
+      const content = fs.readFileSync(srcPath, "utf-8");
+      const brief = extractSection(content, "brief");
+      const firstLine = brief?.split("\n").find(l => l.trim().length > 0) ?? "(no brief)";
+
+      // Move to archive (copy+delete for cross-device safety)
+      const destPath = path.join(archiveDir, entry.file);
+      fs.copyFileSync(srcPath, destPath);
+      fs.unlinkSync(srcPath);
+
+      // Also move state file if exists
+      const stateSrc = stateFilePath(slug, entry.date);
+      if (fs.existsSync(stateSrc)) {
+        const stateDest = path.join(archiveDir, `${entry.date}.state.json`);
+        fs.copyFileSync(stateSrc, stateDest);
+        fs.unlinkSync(stateSrc);
+      }
+
+      summaries.push(`${entry.date}: ${firstLine}`);
+      archived++;
+    }
+  }
+
+  // Write archive index
+  if (summaries.length > 0) {
+    const indexPath = path.join(archiveDir, "index.md");
+    const existing = fs.existsSync(indexPath) ? fs.readFileSync(indexPath, "utf-8") : "# Archive\n\n";
+    fs.writeFileSync(indexPath, existing + summaries.join("\n") + "\n", "utf-8");
+  }
+
+  // Update main index
+  updateIndex(slug);
+
+  return {
+    content: [{
+      type: "text" as const,
+      text: JSON.stringify({
+        archived,
+        summaries,
+        archive_dir: archiveDir,
+      }),
+    }],
   };
 });
 

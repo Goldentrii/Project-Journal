@@ -354,6 +354,22 @@ IF not exists → create with JOURNAL TEMPLATE
 
 ---
 
+## 2.5、今日失败记录 / Key Failures
+
+> Failures are MORE valuable than successes for learning. Record what was ATTEMPTED and FAILED.
+> A session with zero failures either went perfectly (rare) or isn't being honest (common).
+
+| What was attempted | What went wrong | Root cause | Fix applied? |
+|-------------------|----------------|------------|-------------|
+| [task attempted] | [what failed — be specific] | [why it failed — structural, not "tried harder"] | ✅ fixed / ❌ unfixed / 🔄 delegated to next session |
+
+> Examples of honest failure recording:
+> - "Built dashboard from imagination instead of extraction" → Root cause: context fatigue after 8h → Fix: dispatched fresh agent
+> - "Said done 3x without verifying" → Root cause: optimizing for completion, not quality → Fix: added verifier gate
+> - "Captured 13 pages but missed all sub-tabs" → Root cause: "click all" interpreted as "click main things" → Fix: genome v3.2 depth-first walk
+
+---
+
 ## 3、当前项目状态
 
 | 模块 | 状态 | 说明 |
@@ -431,11 +447,15 @@ IF not exists → create with JOURNAL TEMPLATE
 > If no research was done: flag it. This is the #1 source of wasted work.
 > If no plan existed: note whether the task was exploratory (acceptable) or should have been planned.
 
-### 7b. ⚡ EXECUTE (what actually happened vs what was planned)
+### 7b. ⚡ EXECUTE (what actually happened vs what was planned — use COUNTS)
 
-| Task | Planned | Actual | Gap |
+| Task | Planned | Actual | Gap (with numbers) |
 |------|---------|--------|-----|
-| [task] | [what was supposed to happen] | [what actually happened] | [difference — or "none"] |
+| [task] | [what was supposed to happen] | [what actually happened] | [quantify: "planned 13 pages, built 13, but only 3/5 tabs per page"] |
+
+> CRITICAL: Use numbers, not feelings. "Built the dashboard" is useless.
+> "Built 11 pages, 35 tabs, 4 shared components, verified 82/91 routes return 200" is useful.
+> The next agent can verify these numbers. It can't verify "went well."
 
 ### 7c. 🔍 REFLECT (quality assessment — be objective, not defensive)
 
