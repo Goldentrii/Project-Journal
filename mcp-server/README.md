@@ -15,6 +15,26 @@
 
 ---
 
+## `/arsave` — Save Everything in One Shot
+
+> **Two commands. That's all you need.**
+
+| Command | When | What it does |
+|---------|------|-------------|
+| **`/arsave`** | End of session | Write journal + consolidate to palace + update awareness + optional git push |
+| **`/arstart`** | Start of session | Recall cross-project insights + walk palace + load context |
+
+Type `/arsave` after a long project session. Everything gets saved. Type `/arstart` next time. Everything loads back.
+
+```bash
+# Install commands (one-time)
+mkdir -p ~/.claude/commands
+curl -o ~/.claude/commands/arsave.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arsave.md
+curl -o ~/.claude/commands/arstart.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arstart.md
+```
+
+---
+
 ## What Is AgentRecall?
 
 AgentRecall is an **MCP server** (Model Context Protocol) that gives AI agents persistent memory, cross-project insight recall, and a self-compounding awareness system. It works with Claude Code, Cursor, VS Code, Windsurf, and any MCP-compatible agent.
@@ -64,32 +84,11 @@ curl -o ~/.claude/skills/agent-recall/SKILL.md \
   https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/SKILL.md
 ```
 
-### Slash Commands (Claude Code)
-
-Two commands — that's all you need to remember:
-
-| Command | When | What it does |
-|---------|------|-------------|
-| **`/agstart`** | Session start | Recall cross-project insights + walk palace + load context |
-| **`/agsave`** | Session end | Write journal + consolidate to palace + update awareness + optional git push |
-
-Install the commands:
-```bash
-# Download both commands
-mkdir -p ~/.claude/commands
-curl -o ~/.claude/commands/agstart.md \
-  https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/agstart.md
-curl -o ~/.claude/commands/agsave.md \
-  https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/agsave.md
-```
-
-Or just type `/agstart` or `/agsave` in Claude Code — if the commands are installed, they work instantly.
-
 ---
 
 ## How an Agent Uses AgentRecall
 
-### Session Start (`/agstart`)
+### Session Start (`/arstart`)
 ```
 1. recall_insight(context="current task description")   → relevant cross-project insights
 2. palace_walk(depth="active")                           → project context + awareness
@@ -268,7 +267,7 @@ Built by [tongwu](https://github.com/Goldentrii).
 
 - Issues & feedback: [GitHub Issues](https://github.com/Goldentrii/AgentRecall/issues)
 - Email: tongwu0824@gmail.com
-- Protocol spec: [docs/intelligent-distance-protocol.md](docs/intelligent-distance-protocol.md)
+- Protocol spec: [docs/intelligent-distance-protocol.md](https://github.com/Goldentrii/AgentRecall/blob/main/docs/intelligent-distance-protocol.md)
 
 MIT License.
 
@@ -318,29 +317,11 @@ curl -o ~/.claude/skills/agent-recall/SKILL.md \
   https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/SKILL.md
 ```
 
-### 快捷命令（Claude Code）
-
-只需记住两个命令：
-
-| 命令 | 时机 | 功能 |
-|------|------|------|
-| **`/agstart`** | 会话开始 | 召回跨项目洞察 + 加载宫殿上下文 |
-| **`/agsave`** | 会话结束 | 写日志 + 巩固到宫殿 + 更新感知 + 可选 git push |
-
-安装命令：
-```bash
-mkdir -p ~/.claude/commands
-curl -o ~/.claude/commands/agstart.md \
-  https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/agstart.md
-curl -o ~/.claude/commands/agsave.md \
-  https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/agsave.md
-```
-
 ---
 
 ## 智能体使用流程
 
-### 会话开始 (`/agstart`)
+### 会话开始 (`/arstart`)
 ```
 1. recall_insight(context="当前任务描述")    → 跨项目相关洞察
 2. palace_walk(depth="active")               → 项目上下文 + 感知摘要
@@ -476,6 +457,6 @@ curl -o ~/.claude/commands/agsave.md \
 
 - Issues & 反馈：[GitHub Issues](https://github.com/Goldentrii/AgentRecall/issues)
 - 邮箱：tongwu0824@gmail.com
-- 协议规范：[docs/intelligent-distance-protocol.md](docs/intelligent-distance-protocol.md)
+- 协议规范：[docs/intelligent-distance-protocol.md](https://github.com/Goldentrii/AgentRecall/blob/main/docs/intelligent-distance-protocol.md)
 
 MIT 许可证。

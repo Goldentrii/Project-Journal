@@ -1,6 +1,6 @@
 {
   "name": "agent-recall-mcp",
-  "version": "3.3.2",
+  "version": "3.3.3",
   "description": "Memory Palace for AI agents — room-based knowledge organization with fan-out cross-referencing, salience scoring, and Obsidian-compatible output",
   "type": "module",
   "main": "dist/index.js",
