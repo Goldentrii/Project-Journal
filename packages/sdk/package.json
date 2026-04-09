@@ -1,0 +1,28 @@
+{
+  "name": "agent-recall",
+  "version": "1.0.0",
+  "description": "SDK for AgentRecall — persistent, compounding memory for AI agents",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@agent-recall/core": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  },
+  "keywords": ["ai-memory", "agent-recall", "memory-palace", "langchain", "crewai", "agent-memory"],
+  "license": "MIT"
+}
