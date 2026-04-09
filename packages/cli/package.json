@@ -1,6 +1,6 @@
 {
   "name": "@agent-recall/cli",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "CLI for AgentRecall memory system",
   "type": "module",
   "bin": { "ar": "dist/index.js" },
@@ -10,7 +10,7 @@
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@agent-recall/core": "^4.0.0"
+    "@agent-recall/core": "^3.4.0"
   },
   "devDependencies": {
     "typescript": "^5.7.0",
