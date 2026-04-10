@@ -1,6 +1,6 @@
 {
   "name": "agent-recall-sdk",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "SDK for AgentRecall — persistent, compounding memory for AI agents",
   "type": "module",
   "main": "dist/index.js",
@@ -17,7 +17,7 @@
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "agent-recall-core": "^3.3.8"
+    "agent-recall-core": "^3.3.9"
   },
   "devDependencies": {
     "typescript": "^5.7.0",

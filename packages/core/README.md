@@ -133,7 +133,7 @@ Human: "we need SDK, CLI,                     │
 
 **MCP** — for AI agents (Claude Code, Cursor, Windsurf, VS Code, Codex):
 ```bash
-claude mcp add agent-recall -- npx -y agent-recall-mcp
+claude mcp add --scope user agent-recall -- npx -y agent-recall-mcp
 ```
 
 **SDK** — for any JS/TS application (LangChain, CrewAI, Vercel AI SDK, custom):
@@ -176,7 +176,7 @@ A **persistent memory system** that gives AI agents **compounding awareness** ac
 
 ```bash
 # Claude Code
-claude mcp add agent-recall -- npx -y agent-recall-mcp
+claude mcp add --scope user agent-recall -- npx -y agent-recall-mcp
 
 # Cursor — .cursor/mcp.json
 { "mcpServers": { "agent-recall": { "command": "npx", "args": ["-y", "agent-recall-mcp"] } } }
@@ -664,7 +664,7 @@ curl -o ~/.claude/commands/arstart.md https://raw.githubusercontent.com/Goldentr
 
 **MCP** — 面向 AI 智能体（Claude Code、Cursor、Windsurf、VS Code、Codex）：
 ```bash
-claude mcp add agent-recall -- npx -y agent-recall-mcp
+claude mcp add --scope user agent-recall -- npx -y agent-recall-mcp
 ```
 
 **SDK** — 面向任何 JS/TS 应用（LangChain、CrewAI、Vercel AI SDK、自定义）：
@@ -706,7 +706,7 @@ npx agent-recall-cli palace walk --depth active
 
 ```bash
 # Claude Code
-claude mcp add agent-recall -- npx -y agent-recall-mcp
+claude mcp add --scope user agent-recall -- npx -y agent-recall-mcp
 
 # Cursor — .cursor/mcp.json
 { "mcpServers": { "agent-recall": { "command": "npx", "args": ["-y", "agent-recall-mcp"] } } }
@@ -932,7 +932,7 @@ L5: 洞察索引     recall_insight            「跨项目的经验」
 
 | 文档 | 说明 |
 |------|------|
-| [智能距离协议](docs/intelligent-distance-protocol.md) | 基础理论 — 人类与 AI 之间的差距是结构性的，如何导航 |
+| [智能距离协议](docs/intelligent-distance-protocol.md) | 基础理论 — 人类与 AI 之间的差距是结构性的，如何减少两个物种之间的沟通信息损失 |
 | [MCP 适配器规范](docs/mcp-adapter-spec.md) | 基于 AgentRecall 构建适配器的技术规范 |
 | [SDK 设计](docs/sdk-design.md) | SDK 架构设计文档 |
 | [v3.4 升级说明](UPGRADE-v3.4.md) | 周报压缩、宫殿优先冷启动、提升验证 |

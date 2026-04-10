@@ -133,7 +133,7 @@ Human: "we need SDK, CLI,                     │
 
 **MCP** — for AI agents (Claude Code, Cursor, Windsurf, VS Code, Codex):
 ```bash
-claude mcp add agent-recall -- npx -y agent-recall-mcp
+claude mcp add --scope user agent-recall -- npx -y agent-recall-mcp
 ```
 
 **SDK** — for any JS/TS application (LangChain, CrewAI, Vercel AI SDK, custom):
@@ -176,7 +176,7 @@ A **persistent memory system** that gives AI agents **compounding awareness** ac
 
 ```bash
 # Claude Code
-claude mcp add agent-recall -- npx -y agent-recall-mcp
+claude mcp add --scope user agent-recall -- npx -y agent-recall-mcp
 
 # Cursor — .cursor/mcp.json
 { "mcpServers": { "agent-recall": { "command": "npx", "args": ["-y", "agent-recall-mcp"] } } }
@@ -664,7 +664,7 @@ curl -o ~/.claude/commands/arstart.md https://raw.githubusercontent.com/Goldentr
 
 **MCP** — 面向 AI 智能体（Claude Code、Cursor、Windsurf、VS Code、Codex）：
 ```bash
-claude mcp add agent-recall -- npx -y agent-recall-mcp
+claude mcp add --scope user agent-recall -- npx -y agent-recall-mcp
 ```
 
 **SDK** — 面向任何 JS/TS 应用（LangChain、CrewAI、Vercel AI SDK、自定义）：
@@ -706,7 +706,7 @@ npx agent-recall-cli palace walk --depth active
 
 ```bash
 # Claude Code
-claude mcp add agent-recall -- npx -y agent-recall-mcp
+claude mcp add --scope user agent-recall -- npx -y agent-recall-mcp
 
 # Cursor — .cursor/mcp.json
 { "mcpServers": { "agent-recall": { "command": "npx", "args": ["-y", "agent-recall-mcp"] } } }
