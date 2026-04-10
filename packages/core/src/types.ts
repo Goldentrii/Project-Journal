@@ -17,8 +17,21 @@ export const VERSION = "3.4.0";
 
 let _root: string | null = null;
 
+/**
+ * Set the storage root directory. This is process-global state —
+ * only one root is active at a time. Call before any other operations.
+ * Use resetRoot() to revert to environment/default resolution.
+ */
 export function setRoot(root: string): void {
   _root = root;
+}
+
+/**
+ * Clear the explicitly-set root, reverting to AGENT_RECALL_ROOT env var
+ * or the default ~/.agent-recall.
+ */
+export function resetRoot(): void {
+  _root = null;
 }
 
 export function getRoot(): string {

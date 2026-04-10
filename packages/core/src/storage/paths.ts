@@ -59,7 +59,12 @@ export function journalDirs(project: string): string[] {
  */
 export function palaceDir(project: string): string {
   const safe = project.replace(/[^a-zA-Z0-9_\-\.]/g, "-");
-  return path.join(getRoot(), "projects", safe, "palace");
+  const root = getRoot();
+  const resolved = path.join(root, "projects", safe, "palace");
+  if (!resolved.startsWith(root)) {
+    throw new Error(`Invalid project name: ${project}`);
+  }
+  return resolved;
 }
 
 /**

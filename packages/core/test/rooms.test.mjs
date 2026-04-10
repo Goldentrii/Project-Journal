@@ -11,7 +11,7 @@ describe("Palace rooms — module integration", () => {
 
   before(async () => {
     process.env.AGENT_RECALL_ROOT = TEST_ROOT;
-    // Dynamic import after env set so JOURNAL_ROOT picks up test dir
+    // Dynamic import after env set so getRoot() picks up test dir
     rooms = await import("../dist/palace/rooms.js");
   });
 

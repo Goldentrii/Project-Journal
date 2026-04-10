@@ -279,4 +279,56 @@ describe("Tool-logic functions — integration tests", () => {
     assert.ok(result.synthesis.includes("L3 Synthesis"));
     assert.ok(result.entries_analyzed >= 1);
   });
+
+  // ── Cold Start ─────────────────────────────────────────
+
+  it("journalColdStart returns palace-first context", async () => {
+    const result = await core.journalColdStart({ project: "test-proj" });
+    assert.equal(result.project, "test-proj");
+    assert.ok(result.palace_context);
+    assert.ok(typeof result.total_entries === "number");
+    assert.ok(result.cache.hot);
+  });
+
+  // ── Archive ────────────────────────────────────────────
+
+  it("journalArchive with high threshold archives nothing", async () => {
+    const result = await core.journalArchive({
+      older_than_days: 9999,
+      project: "test-proj",
+    });
+    assert.equal(result.archived, 0);
+    assert.ok(result.archive_dir);
+  });
+
+  // ── Rollup ─────────────────────────────────────────────
+
+  it("journalRollup dry run previews without writing", async () => {
+    const result = await core.journalRollup({
+      dry_run: true,
+      min_age_days: 0,
+      min_entries: 1,
+      project: "test-proj",
+    });
+    assert.equal(result.dry_run, true);
+    assert.equal(result.project, "test-proj");
+  });
+
+  // ── Error paths ────────────────────────────────────────
+
+  it("palaceRead returns error for nonexistent room", async () => {
+    const result = await core.palaceRead({
+      room: "nonexistent-room-xyz",
+      project: "test-proj",
+    });
+    assert.ok(result.error);
+  });
+
+  it("journalSearch with no matches returns empty", async () => {
+    const result = await core.journalSearch({
+      query: "zzz-completely-impossible-string-xyz",
+      project: "test-proj",
+    });
+    assert.equal(result.results.length, 0);
+  });
 });

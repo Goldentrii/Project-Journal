@@ -43,6 +43,9 @@ export async function knowledgeWrite(input: KnowledgeWriteInput): Promise<Knowle
 
   const baseDir = getRoot();
   const knowledgeDir = path.join(baseDir, "projects", safe, "knowledge");
+  if (!knowledgeDir.startsWith(baseDir)) {
+    throw new Error(`Invalid project name: ${slug}`);
+  }
   ensureDir(knowledgeDir);
   const legacyPath = path.join(knowledgeDir, `${safeCategory}.md`);
 

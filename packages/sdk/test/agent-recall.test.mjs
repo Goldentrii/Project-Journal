@@ -133,4 +133,57 @@ describe("AgentRecall SDK", () => {
     const result = await ar.synthesize();
     assert.ok(result.synthesis.includes("L3 Synthesis"));
   });
+
+  it("archive with high threshold archives nothing", async () => {
+    const result = await ar.archive(9999);
+    assert.equal(result.archived, 0);
+  });
+
+  it("rollup dry run previews", async () => {
+    const result = await ar.rollup({ dryRun: true, minAgeDays: 0, minEntries: 1 });
+    assert.equal(result.dry_run, true);
+  });
+
+  it("alignmentCheck records alignment", async () => {
+    const result = await ar.alignmentCheck({ goal: "Test SDK alignment", confidence: "high" });
+    assert.equal(result.success, true);
+    assert.ok(result.file);
+  });
+
+  it("nudge records contradiction", async () => {
+    const result = await ar.nudge({
+      past_statement: "Use Redis",
+      current_statement: "Use Postgres",
+      question: "Changed requirements?",
+    });
+    assert.equal(result.success, true);
+  });
+
+  it("knowledgeWrite creates a lesson", async () => {
+    const result = await ar.knowledgeWrite({
+      category: "testing",
+      title: "Test lesson",
+      what_happened: "Something happened",
+      root_cause: "Root cause",
+      fix: "The fix",
+    });
+    assert.equal(result.success, true);
+  });
+
+  it("knowledgeRead returns lessons", async () => {
+    const result = await ar.knowledgeRead({ category: "testing" });
+    assert.ok(result.includes("Test lesson"));
+  });
+
+  it("readAwarenessState returns structured state", () => {
+    const state = ar.readAwarenessState();
+    assert.ok(state);
+    assert.ok(Array.isArray(state.topInsights));
+  });
+
+  it("graph accessor exposes graph functions", () => {
+    assert.ok(typeof ar.graph.readGraph === "function");
+    assert.ok(typeof ar.graph.addEdge === "function");
+    assert.ok(typeof ar.graph.getConnectedRooms === "function");
+  });
 });

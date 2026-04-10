@@ -8,7 +8,7 @@
   "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
-    "test": "echo 'MCP server tests TBD'"
+    "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
     "@agent-recall/core": "^3.4.0",
