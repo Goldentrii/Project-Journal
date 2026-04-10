@@ -35,6 +35,31 @@
 
 ---
 
+<p align="center">
+  <a href="#arsave-and-arstart"><img src="https://img.shields.io/badge/%2Farsave-Save_Session-FF6B6B?style=for-the-badge" alt="/arsave"></a>
+  <a href="#arsave-and-arstart"><img src="https://img.shields.io/badge/%2Farstart-Load_Context-4ECDC4?style=for-the-badge" alt="/arstart"></a>
+</p>
+
+## `/arsave` and `/arstart`
+
+> **Two commands. That's all you need.**
+
+| Command | When | What it does |
+|---------|------|-------------|
+| **`/arsave`** | End of session | Write journal + consolidate to palace + update awareness + optional git push |
+| **`/arstart`** | Start of session | Recall cross-project insights + walk palace + load context |
+
+Type `/arsave` after a long project session. Everything gets saved. Type `/arstart` next time. Everything loads back.
+
+```bash
+# Install commands (one-time, Claude Code only)
+mkdir -p ~/.claude/commands
+curl -o ~/.claude/commands/arsave.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arsave.md
+curl -o ~/.claude/commands/arstart.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arstart.md
+```
+
+---
+
 ## Why Choose AgentRecall
 
 **Your agents forget everything between sessions.** Decisions evaporate. Mistakes repeat. Context rebuilds from scratch every time. AgentRecall fixes this with persistent memory that compounds — getting smarter, not bigger.
@@ -173,24 +198,6 @@ ar palace write architecture "Switched from REST to tRPC"
 
 # Compact old journals into weekly summaries
 ar rollup --min-age-days 14
-```
-
----
-
-## `/arsave` and `/arstart`
-
-> **Two commands. That's all you need for session management.**
-
-| Command | When | What it does |
-|---------|------|-------------|
-| **`/arsave`** | End of session | Write journal + consolidate to palace + update awareness + optional git push |
-| **`/arstart`** | Start of session | Recall cross-project insights + walk palace + load context |
-
-```bash
-# Install commands (one-time, Claude Code only)
-mkdir -p ~/.claude/commands
-curl -o ~/.claude/commands/arsave.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arsave.md
-curl -o ~/.claude/commands/arstart.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arstart.md
 ```
 
 ---
