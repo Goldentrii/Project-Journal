@@ -4,6 +4,7 @@ import { resolveProject } from "../storage/project.js";
 import { journalDir } from "../storage/paths.js";
 import { ensureDir, todayISO } from "../storage/fs-utils.js";
 import { countLogEntries } from "../helpers/journal-files.js";
+import { detectContentType, extractKeywords } from "../helpers/auto-name.js";
 import { ensurePalaceInitialized, roomExists, createRoom } from "../palace/rooms.js";
 import { palaceDir } from "../storage/paths.js";
 import { fanOut } from "../palace/fan-out.js";
@@ -21,6 +22,7 @@ export interface JournalCaptureResult {
   success: boolean;
   entry_number: number;
   palace: { room: string } | null;
+  auto_tags?: string[];
 }
 
 export async function journalCapture(input: JournalCaptureInput): Promise<JournalCaptureResult> {
@@ -28,6 +30,16 @@ export async function journalCapture(input: JournalCaptureInput): Promise<Journa
   const date = todayISO();
   const dir = journalDir(slug);
   ensureDir(dir);
+
+  // Auto-tag: generate tags from content when none provided
+  let autoTags: string[] | undefined;
+  if (!input.tags || input.tags.length === 0) {
+    const combined = `${input.question} ${input.answer}`;
+    const type = detectContentType(combined);
+    const kws = extractKeywords(combined, 2);
+    input.tags = [type, ...kws];
+    autoTags = input.tags;
+  }
 
   const logPath = path.join(dir, `${date}-log.md`);
   const entryNum = countLogEntries(logPath) + 1;
@@ -72,5 +84,5 @@ export async function journalCapture(input: JournalCaptureInput): Promise<Journa
     }
   }
 
-  return { success: true, entry_number: entryNum, palace: palaceResult };
+  return { success: true, entry_number: entryNum, palace: palaceResult, auto_tags: autoTags };
 }

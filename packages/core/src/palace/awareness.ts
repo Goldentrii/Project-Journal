@@ -19,6 +19,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { getRoot } from "../types.js";
 import { ensureDir } from "../storage/fs-utils.js";
+import { extractKeywords } from "../helpers/auto-name.js";
 
 const MAX_LINES = 200;
 
@@ -74,6 +75,8 @@ export interface AwarenessState {
 }
 
 const AWARENESS_JSON_PATH = () => path.join(getRoot(), "awareness-state.json");
+const AWARENESS_ARCHIVE_PATH = () => path.join(getRoot(), "awareness-archive.json");
+const MAX_ARCHIVE = 50;
 
 export function readAwarenessState(): AwarenessState | null {
   const p = AWARENESS_JSON_PATH();
@@ -89,6 +92,68 @@ export function writeAwarenessState(state: AwarenessState): void {
   const p = AWARENESS_JSON_PATH();
   ensureDir(path.dirname(p));
   fs.writeFileSync(p, JSON.stringify(state, null, 2), "utf-8");
+}
+
+// ── Archive: demoted insights are preserved, not deleted ──────────────────
+
+export function readAwarenessArchive(): Insight[] {
+  const p = AWARENESS_ARCHIVE_PATH();
+  if (!fs.existsSync(p)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(p, "utf-8"));
+  } catch {
+    return [];
+  }
+}
+
+export function writeAwarenessArchive(archive: Insight[]): void {
+  const p = AWARENESS_ARCHIVE_PATH();
+  ensureDir(path.dirname(p));
+  // Keep newest first, cap at MAX_ARCHIVE
+  fs.writeFileSync(p, JSON.stringify(archive.slice(0, MAX_ARCHIVE), null, 2), "utf-8");
+}
+
+/** Archive a demoted insight. If a matching insight exists in archive, strengthen it. */
+function archiveInsight(demoted: Insight): void {
+  const archive = readAwarenessArchive();
+  const demotedKeywords = extractKeywords(demoted.title, 3);
+
+  // Check for resurrection candidate (already archived, same topic)
+  const existingIdx = archive.findIndex((a) => {
+    const aKeywords = extractKeywords(a.title, 3);
+    const overlap = demotedKeywords.filter((k) => aKeywords.some((ak) => ak.includes(k) || k.includes(ak)));
+    return overlap.length >= 2;
+  });
+
+  if (existingIdx >= 0) {
+    // Strengthen archived version
+    archive[existingIdx].confirmations += demoted.confirmations;
+    archive[existingIdx].lastConfirmed = demoted.lastConfirmed;
+  } else {
+    // Add to archive (newest first)
+    archive.unshift(demoted);
+  }
+
+  writeAwarenessArchive(archive);
+}
+
+/** Check archive for a matching insight to resurrect. Returns the insight if found. */
+export function resurrectFromArchive(keywords: string[]): Insight | null {
+  const archive = readAwarenessArchive();
+
+  for (let i = 0; i < archive.length; i++) {
+    const aKeywords = extractKeywords(archive[i].title, 3);
+    const overlap = keywords.filter((k) => aKeywords.some((ak) => ak.includes(k) || k.includes(ak)));
+    if (overlap.length >= 2) {
+      // Remove from archive and return for resurrection
+      const [resurrected] = archive.splice(i, 1);
+      resurrected.confirmations += 1; // boost for being rediscovered
+      writeAwarenessArchive(archive);
+      return resurrected;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -122,35 +187,65 @@ export function addInsight(
   }
 
   const now = new Date().toISOString();
-  const titleWords = newInsight.title.toLowerCase().split(/\s+/);
 
-  // Check for similar existing insight (>50% word overlap)
+  // Keyword-based matching (uses auto-name extractKeywords instead of raw word split)
+  // Use limit=6 for broader matching coverage
+  const newKeywords = extractKeywords(newInsight.title, 6);
+
   let bestMatch: { idx: number; overlap: number } | null = null;
   for (let i = 0; i < state.topInsights.length; i++) {
     const existing = state.topInsights[i];
-    const existingWords = existing.title.toLowerCase().split(/\s+/);
-    const overlap = titleWords.filter((w) => existingWords.includes(w) && w.length > 3).length;
-    const ratio = overlap / Math.max(titleWords.length, existingWords.length);
+    const existingKeywords = extractKeywords(existing.title, 6);
+    const overlap = newKeywords.filter((k) => existingKeywords.some((ek) => ek.includes(k) || k.includes(ek)));
+    const ratio = overlap.length / Math.max(newKeywords.length, existingKeywords.length, 1);
     if (ratio > 0.5 && (!bestMatch || ratio > bestMatch.overlap)) {
       bestMatch = { idx: i, overlap: ratio };
     }
   }
 
   if (bestMatch) {
-    // Merge: strengthen existing insight
     const existing = state.topInsights[bestMatch.idx];
-    existing.confirmations++;
-    existing.lastConfirmed = now;
-    existing.evidence += ` | ${newInsight.evidence}`;
-    // Merge appliesWhen
-    for (const aw of newInsight.appliesWhen) {
-      if (!existing.appliesWhen.includes(aw)) {
-        existing.appliesWhen.push(aw);
+
+    // Two-pass merge: if topic overlap is very strong (>0.6), always merge (confirmation).
+    // If topic overlap is moderate (0.5-0.6), check evidence similarity to avoid merging
+    // distinct insights that happen to share vocabulary.
+    if (bestMatch.overlap > 0.6) {
+      // Strong topic match → merge (strengthen)
+      existing.confirmations++;
+      existing.lastConfirmed = now;
+      existing.evidence += ` | ${newInsight.evidence}`;
+      for (const aw of newInsight.appliesWhen) {
+        if (!existing.appliesWhen.includes(aw)) {
+          existing.appliesWhen.push(aw);
+        }
       }
+      writeAwarenessState(state);
+      renderAwareness(state);
+      return { action: "merged", insight: existing };
     }
-    writeAwarenessState(state);
-    renderAwareness(state);
-    return { action: "merged", insight: existing };
+
+    // Moderate topic match → check evidence before merging
+    const existingEvKeywords = extractKeywords(existing.evidence, 4);
+    const newEvKeywords = extractKeywords(newInsight.evidence, 4);
+    const evOverlap = newEvKeywords.filter((k) => existingEvKeywords.some((ek) => ek.includes(k) || k.includes(ek)));
+    const evRatio = evOverlap.length / Math.max(newEvKeywords.length, existingEvKeywords.length, 1);
+
+    if (evRatio > 0.3) {
+      // Same topic, similar evidence → merge
+      existing.confirmations++;
+      existing.lastConfirmed = now;
+      existing.evidence += ` | ${newInsight.evidence}`;
+      for (const aw of newInsight.appliesWhen) {
+        if (!existing.appliesWhen.includes(aw)) {
+          existing.appliesWhen.push(aw);
+        }
+      }
+      writeAwarenessState(state);
+      renderAwareness(state);
+      return { action: "merged", insight: existing };
+    }
+    // Same topic, very different evidence → add as separate insight
+    // Fall through to the "new insight" path below
   }
 
   // New insight
@@ -171,9 +266,10 @@ export function addInsight(
     return { action: "added", insight };
   }
 
-  // Over 10: replace lowest-confirmation insight
+  // Over 10: demote lowest-confirmation insight to archive (not deleted)
   state.topInsights.sort((a, b) => b.confirmations - a.confirmations);
   const demoted = state.topInsights.pop()!;
+  archiveInsight(demoted);
   state.topInsights.push(insight);
 
   writeAwarenessState(state);

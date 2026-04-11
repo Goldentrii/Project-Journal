@@ -66,6 +66,9 @@ export {
   addInsight,
   detectCompoundInsights,
   renderAwareness,
+  readAwarenessArchive,
+  writeAwarenessArchive,
+  resurrectFromArchive,
 } from "./palace/awareness.js";
 export type {
   Insight,
@@ -134,6 +137,14 @@ export { extractSection, appendToSection } from "./helpers/sections.js";
 // Helpers — rollup
 export { isoWeek, weekKey, groupByWeek, synthesizeWeek } from "./helpers/rollup.js";
 
+// Helpers — auto-naming
+export { generateSlug, detectContentType, extractKeywords, generateTopicName } from "./helpers/auto-name.js";
+export type { SlugResult, SlugContext } from "./helpers/auto-name.js";
+
+// Helpers — alignment patterns
+export { readAlignmentLog, extractWatchPatterns } from "./helpers/alignment-patterns.js";
+export type { WatchForPattern } from "./helpers/alignment-patterns.js";
+
 // Tool logic functions (extracted from MCP tool handlers)
 export { journalRead, type JournalReadInput, type JournalReadResult } from "./tools-logic/journal-read.js";
 export { journalWrite, type JournalWriteInput, type JournalWriteResult } from "./tools-logic/journal-write.js";
@@ -157,3 +168,12 @@ export { palaceLint, type PalaceLintInput, type PalaceLintResult, type LintIssue
 export { palaceSearch, type PalaceSearchInput, type PalaceSearchResult } from "./tools-logic/palace-search.js";
 export { awarenessUpdate, type AwarenessUpdateInput, type AwarenessUpdateResult } from "./tools-logic/awareness-update.js";
 export { recallInsight, type RecallInsightInput, type RecallInsightResult } from "./tools-logic/recall-insight.js";
+
+// Tool logic — smart routing
+export { smartRemember, type SmartRememberInput, type SmartRememberResult } from "./tools-logic/smart-remember.js";
+export { smartRecall, type SmartRecallInput, type SmartRecallResult } from "./tools-logic/smart-recall.js";
+
+// Tool logic — v3.4 composite tools (5-tool surface)
+export { sessionStart, type SessionStartInput, type SessionStartResult } from "./tools-logic/session-start.js";
+export { sessionEnd, type SessionEndInput, type SessionEndResult } from "./tools-logic/session-end.js";
+export { check, type CheckInput, type CheckResult, type WatchFor, type PastDelta } from "./tools-logic/check.js";

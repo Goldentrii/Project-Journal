@@ -12,9 +12,12 @@ import * as path from "node:path";
 import { palaceDir } from "../storage/paths.js";
 import { extractWikilinks, addBackReference } from "./obsidian.js";
 import { addEdge, getConnectionCount } from "./graph.js";
-import { getRoomMeta, updateRoomMeta } from "./rooms.js";
+import { getRoomMeta, updateRoomMeta, listRooms } from "./rooms.js";
 import { computeSalience } from "./salience.js";
+import { extractKeywords } from "../helpers/auto-name.js";
 import type { Importance } from "../types.js";
+
+const MAX_AUTO_EDGES = 5;
 
 export interface FanOutResult {
   updatedRooms: string[];
@@ -62,6 +65,37 @@ export function fanOut(
       updateRoomMeta(project, targetRoom, {
         connections: [...targetMeta.connections, sourceRoom],
       });
+    }
+  }
+
+  // ── Auto-link by keywords (no wikilinks needed) ──────────────────────
+  const contentKeywords = extractKeywords(content, 5);
+  if (contentKeywords.length >= 2) {
+    const allRooms = listRooms(project);
+    let autoEdgeCount = 0;
+    for (const room of allRooms) {
+      if (room.slug === sourceRoom || autoEdgeCount >= MAX_AUTO_EDGES) break;
+      if (allTargets.has(room.slug)) continue; // already linked via wikilink
+
+      const roomKeywords = [...room.tags, ...room.name.toLowerCase().split(/\s+/)];
+      const overlap = contentKeywords.filter((k) =>
+        roomKeywords.some((rk) => rk.includes(k) || k.includes(rk))
+      );
+
+      if (overlap.length >= 2) {
+        addEdge(pd, `${sourceRoom}/${sourceTopic}`, room.slug, "auto-related", 0.3);
+        result.newEdges++;
+        autoEdgeCount++;
+
+        // Update target room's connections
+        const targetMeta = getRoomMeta(project, room.slug);
+        if (targetMeta && !targetMeta.connections.includes(sourceRoom)) {
+          updateRoomMeta(project, room.slug, {
+            connections: [...targetMeta.connections, sourceRoom],
+          });
+          result.updatedRooms.push(room.slug);
+        }
+      }
     }
   }
 

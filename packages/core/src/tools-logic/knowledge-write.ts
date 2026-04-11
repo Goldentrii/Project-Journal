@@ -7,6 +7,7 @@ import { getRoot } from "../types.js";
 import { ensurePalaceInitialized, roomExists, createRoom } from "../palace/rooms.js";
 import { fanOut } from "../palace/fan-out.js";
 import { updatePalaceIndex } from "../palace/index-manager.js";
+import { generateSlug } from "../helpers/auto-name.js";
 
 export interface KnowledgeWriteInput {
   project?: string;
@@ -31,7 +32,14 @@ export interface KnowledgeWriteResult {
 export async function knowledgeWrite(input: KnowledgeWriteInput): Promise<KnowledgeWriteResult> {
   const slug = await resolveProject(input.project);
   const safe = slug.replace(/[^a-zA-Z0-9_\-\.]/g, "-");
-  const safeCategory = input.category.replace(/[^a-zA-Z0-9_\-]/g, "-").toLowerCase();
+  let safeCategory = input.category.replace(/[^a-zA-Z0-9_\-]/g, "-").toLowerCase();
+
+  // Auto-slug: generate meaningful category name for generic categories
+  if (["general", "misc", "other"].includes(safeCategory)) {
+    const autoSlug = generateSlug(input.what_happened, {});
+    safeCategory = autoSlug.slug.split("-").slice(0, 3).join("-");
+  }
+
   const date = todayISO();
   const severity = input.severity ?? "important";
 

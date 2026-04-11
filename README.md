@@ -9,7 +9,7 @@
   <a href="https://www.npmjs.com/package/agent-recall-sdk"><img src="https://img.shields.io/npm/v/agent-recall-sdk?style=flat-square&label=SDK&color=0EA5E9" alt="SDK npm"></a>
   <a href="https://www.npmjs.com/package/agent-recall-cli"><img src="https://img.shields.io/npm/v/agent-recall-cli?style=flat-square&label=CLI&color=10B981" alt="CLI npm"></a>
   <a href="https://github.com/Goldentrii/AgentRecall/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square" alt="License"></a>
-  <img src="https://img.shields.io/badge/MCP-22_tools-orange?style=flat-square" alt="Tools">
+  <img src="https://img.shields.io/badge/MCP-5_tools-orange?style=flat-square" alt="Tools">
   <img src="https://img.shields.io/badge/cloud-zero-blue?style=flat-square" alt="Zero Cloud">
   <img src="https://img.shields.io/badge/Obsidian-compatible-7C3AED?style=flat-square" alt="Obsidian">
 </p>
@@ -20,7 +20,7 @@
   <a href="#three-ways-to-use-it">Use</a> ·
   <a href="#what-is-agentrecall">What</a> ·
   <a href="#quick-start">Install</a> ·
-  <a href="#22-mcp-tools">Tools</a> ·
+  <a href="#5-mcp-tools">Tools</a> ·
   <a href="#sdk-api">SDK</a> ·
   <a href="#cli-commands">CLI</a> ·
   <a href="#architecture">Architecture</a> ·
@@ -29,7 +29,7 @@
   <b>中文:</b>&nbsp;
   <a href="#agentrecall中文文档">简介</a> ·
   <a href="#快速开始">安装</a> ·
-  <a href="#22-个-mcp-工具">工具</a> ·
+  <a href="#5-个-mcp-工具">工具</a> ·
   <a href="#sdk-api-1">SDK</a> ·
   <a href="#cli-命令">CLI</a> ·
   <a href="#架构">架构</a>
@@ -315,79 +315,39 @@ ar rollup --min-age-days 14
 
 ### Session Start (`/arstart`)
 ```
-1. recall_insight(context="current task description")   → relevant cross-project insights
-2. palace_walk(depth="active")                           → project context + awareness
+session_start()  → identity, insights, active rooms, cross-project matches,
+                   recent journal briefs, watch_for warnings — all in one call
 ```
 
 ### During Work
 ```
-3. alignment_check(goal="...", confidence="medium")      → verify understanding before big tasks
-4. palace_write(room="architecture", content="...")      → permanent knowledge with cross-refs
-5. journal_capture(question="...", answer="...")          → lightweight Q&A log
+remember("We decided to use GraphQL instead of REST")  → auto-routes to the right store
+recall("authentication design")                          → searches all stores, ranked results
+check(goal="build auth", confidence="medium")            → verify understanding, get warnings
 ```
 
-### Session End
+### Session End (`/arsave`)
 ```
-6. journal_write(content="...", section="decisions")     → daily journal entry
-7. awareness_update(insights=[...])                       → compound into awareness system
-8. context_synthesize(consolidate=true)                   → promote journal → palace rooms
+session_end(summary="...", insights=[...], trajectory="...")  → journal + awareness + consolidation
 ```
 
 ---
 
-## 22 MCP Tools
+## 5 MCP Tools
 
-### Memory Palace (5 tools)
+AgentRecall exposes exactly 5 tools to agents. Each tool composes multiple subsystems internally — the agent doesn't need to know about the plumbing.
 
-| Tool | Purpose |
-|------|---------|
-| `palace_read` | Read a room or list all rooms in the Memory Palace |
-| `palace_write` | Write memory with fan-out — auto-updates cross-references via `[[wikilinks]]` |
-| `palace_walk` | Progressive cold-start: identity (~50 tok) → active (~200) → relevant (~500) → full (~2000) |
-| `palace_lint` | Health check: stale, orphan, low-salience rooms. `fix=true` to auto-archive |
-| `palace_search` | Search across all rooms, results ranked by salience score |
+| Tool | What it does |
+|------|-------------|
+| `session_start` | Load project context for a new session. Returns identity, top insights, active rooms, cross-project matches, recent activity, and predictive `watch_for` warnings from past corrections. One call, ~400 tokens. |
+| `remember` | Save a memory. Auto-classifies content (bug fix, architecture decision, insight, session note) and routes to the right store (journal, palace, knowledge, or awareness). Auto-generates semantic names for future retrieval. |
+| `recall` | Search all memory stores at once — palace, journal, and insights. Returns ranked results with stable IDs. Accepts `feedback` to rate previous results: positive boosts future ranking, negative penalizes. Query-aware — feedback from one search doesn't bleed into unrelated queries. |
+| `session_end` | Save everything in one call. Writes journal, updates awareness with new insights, consolidates to palace rooms, archives demoted insights (not deleted — preserved with resurrection support). |
+| `check` | Record what you think the human wants. Returns `watch_for` patterns from past correction history ("You've been corrected on X 3 times — ask about it"). Accepts `human_correction` and `delta` after the human responds. Auto-promotes strong patterns (3+) to awareness. |
 
-### Awareness & Insights (2 tools)
+### Legacy tools
 
-| Tool | Purpose |
-|------|---------|
-| `awareness_update` | Add insights to the compounding awareness system. Merges with existing, detects patterns |
-| `recall_insight` | Before starting work, recall cross-project insights relevant to the current task |
-
-### Session Memory (6 tools)
-
-| Tool | Purpose |
-|------|---------|
-| `journal_read` | Read entry by date or "latest", with section filtering |
-| `journal_write` | Write daily journal. Optional `palace_room` for palace integration |
-| `journal_capture` | Lightweight L1 Q&A capture. Optional `palace_room` |
-| `journal_list` | List recent journal entries |
-| `journal_search` | Full-text search across history. `include_palace=true` for palace too |
-| `journal_projects` | List all tracked projects |
-
-### Architecture (4 tools)
-
-| Tool | Purpose |
-|------|---------|
-| `journal_state` | JSON state layer — structured read/write for agent-to-agent handoffs |
-| `journal_cold_start` | Palace-first cold start: loads identity + awareness + top rooms (~200 tok), then HOT journals only |
-| `journal_archive` | Archive old entries to cold storage with summaries |
-| `journal_rollup` | Condense old daily journals into weekly summaries. Prevents accumulation. `dry_run=true` to preview |
-
-### Knowledge (2 tools)
-
-| Tool | Purpose |
-|------|---------|
-| `knowledge_write` | Write permanent lessons — dynamic categories, auto-creates palace rooms |
-| `knowledge_read` | Read lessons by project, category, or search query |
-
-### Alignment (3 tools)
-
-| Tool | Purpose |
-|------|---------|
-| `alignment_check` | Record confidence + assumptions → human corrects BEFORE work starts |
-| `nudge` | Detect contradiction between current and past input → surface before damage |
-| `context_synthesize` | L3 synthesis. `consolidate=true` writes results into palace rooms |
+The original 22 subsystem tools (palace_write, journal_capture, awareness_update, etc.) remain available via the SDK and CLI for backward compatibility and advanced use cases. They are not registered in the MCP server by default.
 
 ---
 
@@ -890,59 +850,21 @@ ar insight "构建认证中间件"
 
 ---
 
-## 22 个 MCP 工具
+## 5 个 MCP 工具
 
-### 记忆宫殿（5 个）
-
-| 工具 | 功能 |
-|------|------|
-| `palace_read` | 读取房间内容或列出所有房间 |
-| `palace_write` | 写入记忆，自动通过 `[[wikilinks]]` 扇出交叉引用 |
-| `palace_walk` | 渐进式冷启动：identity (~50 tok) → active (~200) → relevant (~500) → full (~2000) |
-| `palace_lint` | 健康检查：过期、孤立、低显著性房间。`fix=true` 自动归档 |
-| `palace_search` | 全房间搜索，按显著性评分排序 |
-
-### 感知与洞察（2 个）
+AgentRecall 只向 agent 暴露 5 个工具。每个工具内部组合多个子系统 — agent 不需要了解内部管道。
 
 | 工具 | 功能 |
 |------|------|
-| `awareness_update` | 添加洞察到复合感知系统。自动合并相似洞察，检测跨洞察模式 |
-| `recall_insight` | 开始任务前，召回跨项目的相关洞察 |
+| `session_start` | 加载项目上下文。返回身份、洞察、活跃房间、跨项目匹配、最近活动、以及来自历史纠正的 `watch_for` 预警。一次调用，约 400 token。 |
+| `remember` | 保存记忆。自动分类内容（bug 修复、架构决策、洞察、会话笔记）并路由到正确的存储。自动生成语义化名称便于未来检索。 |
+| `recall` | 一次搜索所有记忆 — 宫殿、日志、洞察。返回带稳定 ID 的排名结果。支持 `feedback` 评价结果：正面提升排名，负面降低。查询感知 — 某次搜索的反馈不影响无关查询。 |
+| `session_end` | 一次调用保存全部。写入日志、更新感知、整合到宫殿、归档被替换的洞察（不删除 — 支持复活）。 |
+| `check` | 记录你对人类意图的理解。返回历史纠正模式的 `watch_for` 预警。支持记录 `human_correction` 和 `delta`。3+ 次的强模式自动提升为感知洞察。 |
 
-### 会话记忆（6 个）
+### 旧版工具
 
-| 工具 | 功能 |
-|------|------|
-| `journal_read` | 按日期读取日志，支持章节过滤 |
-| `journal_write` | 写入每日日志。可选 `palace_room` 同步到宫殿 |
-| `journal_capture` | 轻量问答捕获 |
-| `journal_list` | 列出最近日志 |
-| `journal_search` | 全文搜索。`include_palace=true` 同时搜索宫殿 |
-| `journal_projects` | 列出所有项目 |
-
-### 架构工具（4 个）
-
-| 工具 | 功能 |
-|------|------|
-| `journal_state` | JSON 状态层 — agent 间毫秒级结构化交接 |
-| `journal_cold_start` | 宫殿优先冷启动：先加载身份+感知+高权重房间(~200 token)，再加载日志 |
-| `journal_archive` | 归档旧条目到冷存储 |
-| `journal_rollup` | 将旧日志压缩为周报。防止日志无限积累。`dry_run=true` 预览 |
-
-### 知识工具（2 个）
-
-| 工具 | 功能 |
-|------|------|
-| `knowledge_write` | 写入永久教训 — 动态类别，自动创建宫殿房间 |
-| `knowledge_read` | 按项目、类别或搜索词读取教训 |
-
-### 对齐工具（3 个）
-
-| 工具 | 功能 |
-|------|------|
-| `alignment_check` | 记录置信度 + 假设 → 人类在工作前纠正 |
-| `nudge` | 检测与过去决策的矛盾 → 在造成损失前提出 |
-| `context_synthesize` | L3 合成。`consolidate=true` 将结果写入宫殿房间 |
+原始 22 个子系统工具（palace_write、journal_capture、awareness_update 等）通过 SDK 和 CLI 仍然可用，适用于向后兼容和高级用例。MCP 服务器默认不注册这些工具。
 
 ---
 

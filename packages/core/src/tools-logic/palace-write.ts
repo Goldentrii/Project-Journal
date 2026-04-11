@@ -9,6 +9,7 @@ import { updatePalaceIndex } from "../palace/index-manager.js";
 import { generateFrontmatter } from "../palace/obsidian.js";
 import type { Importance } from "../types.js";
 import { appendToLog } from "../palace/log.js";
+import { generateSlug } from "../helpers/auto-name.js";
 
 export interface PalaceWriteInput {
   room: string;
@@ -17,6 +18,7 @@ export interface PalaceWriteInput {
   connections?: string[];
   importance?: Importance;
   project?: string;
+  auto_name?: boolean;
 }
 
 export interface PalaceWriteResult {
@@ -26,6 +28,7 @@ export interface PalaceWriteResult {
   project: string;
   importance: Importance;
   fan_out: { updated_rooms: string[]; new_edges: number };
+  generated_name?: string;
 }
 
 export async function palaceWrite(input: PalaceWriteInput): Promise<PalaceWriteResult> {
@@ -38,7 +41,19 @@ export async function palaceWrite(input: PalaceWriteInput): Promise<PalaceWriteR
   }
 
   const pd = palaceDir(slug);
-  const targetTopic = input.topic ?? "README";
+
+  // Auto-naming: generate topic name from content when explicitly enabled
+  // Default: false (preserves backward compat — no topic means README)
+  // smart_remember sets auto_name=true to get semantic topic names
+  let targetTopic = input.topic;
+  let generatedName: string | undefined;
+  if (!targetTopic && input.auto_name === true) {
+    const slugResult = generateSlug(input.content, { room: input.room });
+    targetTopic = slugResult.slug;
+    generatedName = slugResult.slug;
+  }
+  targetTopic = targetTopic ?? "README";
+
   const targetFile = path.join(pd, "rooms", input.room, `${targetTopic}.md`);
   ensureDir(path.dirname(targetFile));
 
@@ -82,5 +97,6 @@ export async function palaceWrite(input: PalaceWriteInput): Promise<PalaceWriteR
     project: slug,
     importance,
     fan_out: { updated_rooms: fanOutResult.updatedRooms, new_edges: fanOutResult.newEdges },
+    generated_name: generatedName,
   };
 }
