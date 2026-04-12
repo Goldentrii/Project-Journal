@@ -421,21 +421,25 @@ async function main(): Promise<void> {
     case "hook-end": {
       // Fires at session Stop via Stop hook.
       // Auto-saves a minimal journal entry IF /arsave wasn't called manually.
-      // Checks today's journal to avoid double-writing.
-      try {
-        const today = new Date().toISOString().slice(0, 10);
-        // Check if today's journal already exists (written by /arsave)
-        const journalDir = path.join(os.homedir(), ".agent-recall", "projects",
-          project ?? "auto", "journal");
-        const todayEntry = path.join(journalDir, `${today}.md`);
+      // Per-session lock (mirrors hook-start) prevents double-fire within the same session.
+      const endSessionId = process.env.CLAUDE_SESSION_ID ?? process.env.SESSION_ID ?? "";
+      const endToday = new Date().toISOString().slice(0, 10);
+      const endLockKey = `${endSessionId || endToday}-end`;
+      const endLockFile = path.join(os.homedir(), ".agent-recall", ".hook-end-lock");
 
-        if (fs.existsSync(todayEntry)) {
-          // /arsave already ran — nothing to do
+      try {
+        if (fs.existsSync(endLockFile) && fs.readFileSync(endLockFile, "utf-8").trim() === endLockKey) {
           process.exit(0);
         }
+        fs.writeFileSync(endLockFile, endLockKey, "utf-8");
+      } catch { /* non-blocking */ }
+
+      try {
+        const today = endToday;
 
         // Auto-summarize from today's captures if any
-        const logFile = path.join(journalDir, `${today}-log.md`);
+        const resolvedJournalDir = path.join(os.homedir(), ".agent-recall", "projects", project ?? "auto", "journal");
+        const logFile = path.join(resolvedJournalDir, `${today}-log.md`);
         let summary = "Session ended (auto-saved via hook)";
         if (fs.existsSync(logFile)) {
           const logContent = fs.readFileSync(logFile, "utf-8");
