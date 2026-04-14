@@ -7,6 +7,7 @@
     "packages/cli"
   ],
   "scripts": {
+    "sync-readme": "cp README.md packages/core/README.md && cp README.md packages/mcp-server/README.md && cp README.md packages/sdk/README.md && cp README.md packages/cli/README.md",
     "build": "npm run build -w packages/core && npm run build -w packages/mcp-server && npm run build -w packages/sdk && npm run build -w packages/cli",
     "test": "npm test -w packages/core && npm test -w packages/mcp-server && npm test -w packages/sdk && npm test -w packages/cli",
     "clean": "rm -rf packages/*/dist packages/*/*.tsbuildinfo",
