@@ -131,8 +131,8 @@ Human: "we need SDK, CLI,                     ▼
   │                                           │   names, and version policy.
   ├─ Execute in order:                        │
   │   1. Core extraction ✓                    └─ Done in 2 minutes
-  │   2. Tool logic split ✓                       (vs 20 min cold start
-  │   3. MCP wrappers ✓                             without AgentRecall)
+  │   2. Tool logic split ✓                      
+  │   3. MCP wrappers ✓                            
   │   4. SDK + CLI ✓
   │
 /arsave
@@ -890,8 +890,8 @@ curl -o ~/.claude/commands/arstart.md https://raw.githubusercontent.com/Goldentr
   │                                             │   包名和版本策略。
   ├─ 按顺序执行：                               │
   │   1. 核心提取 ✓                             └─ 2 分钟完成
-  │   2. 工具逻辑拆分 ✓                             （没有 AgentRecall
-  │   3. MCP 封装 ✓                                   需要 2-8 分钟冷启动）
+  │   2. 工具逻辑拆分 ✓                             
+  │   3. MCP 封装 ✓                                   
   │   4. SDK + CLI ✓
   │
 /arsave
@@ -904,7 +904,7 @@ curl -o ~/.claude/commands/arstart.md https://raw.githubusercontent.com/Goldentr
 
 ## 为什么选择 AgentRecall
 
-**AgentRecall 不是记忆工具，而是学习循环。**
+**AgentRecall 不仅是记忆工具，并且学习循环。**
 
 你的智能体在会话之间不是真的遗忘——它们是记不清楚、分不清主次，甚至听不懂你在说什么。AgentRecall 像人类记忆一样运作：把不重要的东西冬眠起来，但随时可以唤醒。更重要的是，它让智能体越用越懂你。
 
