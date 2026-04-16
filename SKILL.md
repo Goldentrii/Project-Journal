@@ -1,14 +1,26 @@
 ---
 name: agent-recall
 description: >-
-  Persistent compounding memory for AI agents. 5 MCP tools: session_start,
-  remember, recall, session_end, check. Auto-naming, feedback loop, correction
-  capture, cross-project insight matching. Stores everything as local markdown.
-  Zero cloud, zero telemetry, Obsidian-compatible.
+  Persistent compounding memory for AI agents. 6 MCP tools: session_start,
+  remember, recall, session_end, check, digest. Auto-naming, feedback loop,
+  correction capture, cross-project insight matching. Stores everything as
+  local markdown. Zero cloud, zero telemetry, Obsidian-compatible.
 origin: community
-version: 3.3.14
+version: 3.3.17
 author: Goldentrii
 platform: clawhub
+install:
+  mcp:
+    command: npx
+    args: ["-y", "agent-recall-mcp"]
+    transport: stdio
+    env: {}
+security:
+  network: none
+  credentials: none
+  filesystem: read-write ~/.agent-recall/ only
+  telemetry: none
+  cloud: none
 tags:
   - memory
   - persistence
@@ -44,9 +56,9 @@ skip:
   - "算了"
 ---
 
-# AgentRecall v3.3.14 — Agent Instructions
+# AgentRecall v3.3.17 — Usage Guide
 
-You have access to AgentRecall, a persistent memory system with 5 MCP tools. This file tells you exactly how and when to use them.
+AgentRecall is a persistent memory system with 6 MCP tools. This guide describes how and when to use them.
 
 ## Setup
 
@@ -101,13 +113,13 @@ transport: stdio
 
 ---
 
-## The 5 Tools
+## Tools
 
-You have exactly 5 tools. No more, no less.
+AgentRecall provides these MCP tools:
 
 ### `session_start`
 
-**When:** Beginning of every session. Call FIRST before any work.
+**When:** Beginning of a session, to load prior context.
 
 **What it returns:**
 - `project` — detected project name
@@ -178,7 +190,7 @@ Feedback is query-aware — rating something "useless" for one query doesn't pen
 
 ### `session_end`
 
-**When:** End of session. Call ONCE, after all work is done.
+**When:** End of session, after work is done.
 
 **What it does in one call:**
 - Writes daily journal entry
@@ -294,16 +306,16 @@ COMPOUND: After 10 sessions
 
 ---
 
-## Rules
+## Best Practices
 
-1. **Always call `session_start` first.** No exceptions. Even for quick tasks — insights from past sessions prevent repeated mistakes.
-2. **Never skip `session_end`.** If the session produced any decisions, insights, or corrections, save them.
-3. **Insights must be reusable.** Write them for a future agent who has never seen this project.
+1. **Call `session_start` at the beginning.** Insights from past sessions prevent repeated mistakes.
+2. **Call `session_end` when done.** If the session produced decisions, insights, or corrections, save them.
+3. **Insights should be reusable.** Write them for a future agent who has never seen this project.
 4. **Match the human's language.** If they write in Chinese, save in Chinese.
 5. **Don't over-save.** 1-3 insights per session. 1-2 `remember` calls during work. More is noise.
-6. **Rate your recall results.** Feedback makes future retrievals better. If a result was useless, say so.
+6. **Rate your recall results.** Feedback makes future retrievals better.
 7. **Use `check` for ambiguous tasks.** 5 seconds of verification beats 30 minutes of wrong work.
-8. **watch_for is gold.** If `session_start` or `check` returns warnings, read them carefully and adjust.
+8. **Read `watch_for` warnings.** If `session_start` or `check` returns warnings, adjust your approach.
 
 ---
 
@@ -345,4 +357,15 @@ Obsidian-compatible. Open `palace/` as a vault to see the knowledge graph.
 | OpenCode | MCP server config |
 | Any MCP client | `command: npx, args: ["-y", "agent-recall-mcp"], transport: stdio` |
 
-All platforms use the same 5 tools. No platform-specific behavior.
+All platforms use the same tools. No platform-specific behavior.
+
+---
+
+## Security & Privacy
+
+- **Zero network:** No outbound HTTP requests, no telemetry, no analytics, no cloud sync. All operations are local filesystem reads/writes.
+- **Zero credentials:** No API keys, tokens, or environment variables required.
+- **Scoped filesystem access:** Reads/writes only to `~/.agent-recall/` (configurable via `--root` flag). Does not access files outside this directory unless the agent explicitly passes project-specific paths.
+- **No code execution:** The MCP server does not execute arbitrary code, run shell commands, or spawn child processes.
+- **Transparent storage:** All data is human-readable markdown and JSON. Inspect it anytime: `ls ~/.agent-recall/` or open it as an Obsidian vault.
+- **Open source:** Full source at [github.com/Goldentrii/AgentRecall](https://github.com/Goldentrii/AgentRecall). MIT license. 194 tests.
