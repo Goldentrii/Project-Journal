@@ -78,6 +78,10 @@ META:
   ar knowledge write --category <cat> --title "t" --what "w" --cause "c" --fix "f"
   ar knowledge read [--category <cat>]
 
+MULTI-SESSION:
+  ar sessions                List all Claude Code sessions active today (diagnostic)
+  ar saveall [--dry-run]     Save all today's sessions to AgentRecall automatically
+
 HOOKS (auto-fired by Claude Code hooks — no agent discipline needed):
   ar hook-start          Session start: load context, show watch_for warnings
   ar hook-end            Session end: auto-save journal if not already saved today
@@ -592,6 +596,128 @@ async function main(): Promise<void> {
         process.stderr.write(`Usage: ar digest store|recall|list|invalidate [...opts]\n`);
         process.exit(1);
       }
+      break;
+    }
+
+    // -----------------------------------------------------------------------
+    // ar sessions — list today's VS Code sessions (diagnostic)
+    // -----------------------------------------------------------------------
+    case "sessions": {
+      const { readTodaySessions } = await import("./utils/transcript-reader.js");
+      const sessions = readTodaySessions();
+      const today = new Date().toISOString().slice(0, 10);
+
+      if (sessions.length === 0) {
+        output(`No Claude Code sessions found today (${today}).`);
+        break;
+      }
+
+      output(`Claude Code sessions — ${today} (${sessions.length} found)\n`);
+      for (const s of sessions) {
+        const t = s.lastModified.toTimeString().slice(0, 5);
+        const proj = s.projectGuess ?? "(unknown)";
+        const mb = s.sizeMb.toFixed(1);
+        const first = (s.firstUserMessage ?? "(no message found)")
+          .replace(/\n/g, " ")
+          .slice(0, 100);
+        output(`  ${t}  ${mb.padStart(6)}MB  ${proj}`);
+        output(`         ${first}`);
+      }
+      break;
+    }
+
+    // -----------------------------------------------------------------------
+    // ar saveall — save all today's sessions to AgentRecall
+    // -----------------------------------------------------------------------
+    case "saveall": {
+      const { readTodaySessions } = await import("./utils/transcript-reader.js");
+      const dryRun = hasFlag("--dry-run", rest);
+      const today = new Date().toISOString().slice(0, 10);
+      const arRoot = path.join(os.homedir(), ".agent-recall", "projects");
+
+      const sessions = readTodaySessions();
+      if (sessions.length === 0) {
+        output(`No Claude Code sessions found for today (${today}).`);
+        break;
+      }
+
+      // Deduplicate by project — each project gets one session_end call
+      // combining all sessions that share the same projectGuess.
+      const byProject = new Map<string, typeof sessions>();
+      for (const s of sessions) {
+        const key = s.projectGuess ?? `unknown-${s.lastModified.toTimeString().slice(0, 5).replace(":", "")}`;
+        if (!byProject.has(key)) byProject.set(key, []);
+        byProject.get(key)!.push(s);
+      }
+
+      const saved: string[] = [];
+      const skipped: string[] = [];
+      const failed: { proj: string; err: string }[] = [];
+
+      for (const [proj, projSessions] of byProject) {
+        // Check if already journaled today (any .md that isn't -log.md or -alignment.md)
+        const journalDir = path.join(arRoot, proj, "journal");
+        let alreadyJournaled = false;
+        if (fs.existsSync(journalDir)) {
+          alreadyJournaled = fs.readdirSync(journalDir).some((f) => {
+            if (!f.startsWith(today)) return false;
+            if (f.endsWith("-log.md") || f.endsWith("-alignment.md")) return false;
+            return f.endsWith(".md");
+          });
+        }
+
+        if (alreadyJournaled) {
+          skipped.push(proj);
+          continue;
+        }
+
+        // Synthesize summary from all sessions for this project
+        const largest = projSessions.sort((a, b) => b.sizeMb - a.sizeMb)[0];
+        const firstMsg = projSessions
+          .map((s) => s.firstUserMessage)
+          .find((m) => m != null);
+
+        // Pull last few assistant lines from the largest session as "what was done"
+        const recentLines = largest.recentExchanges
+          .split("\n")
+          .filter((l) => l.startsWith("ASSISTANT:"))
+          .slice(-4)
+          .map((l) => l.replace("ASSISTANT:", "").trim().slice(0, 150))
+          .join(" | ");
+
+        const totalMb = projSessions.reduce((acc, s) => acc + s.sizeMb, 0).toFixed(1);
+        const lastTime = projSessions[0].lastModified.toTimeString().slice(0, 5);
+
+        const summary = [
+          firstMsg
+            ? `Task: ${firstMsg.replace(/\n/g, " ").slice(0, 200)}`
+            : `Session in ${proj}`,
+          recentLines ? `Recent: ${recentLines.slice(0, 300)}` : null,
+          `(Auto-saved by ar saveall — ${totalMb}MB across ${projSessions.length} session${projSessions.length > 1 ? "s" : ""}, last active ${lastTime})`,
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+
+        if (dryRun) {
+          output(`[DRY RUN] Would save: ${proj}\n  ${summary.slice(0, 120)}\n`);
+          saved.push(proj);
+          continue;
+        }
+
+        try {
+          await core.sessionEnd({ summary, project: proj, insights: [] });
+          saved.push(proj);
+        } catch (e) {
+          failed.push({ proj, err: String(e) });
+        }
+      }
+
+      // Report
+      output(`\nar saveall — ${today}\n`);
+      for (const p of saved) output(`  ✓ ${p}`);
+      for (const p of skipped) output(`  ~ ${p} — already journaled, skipped`);
+      for (const f of failed) output(`  ✗ ${f.proj} — ${f.err}`);
+      output(`\nTotal: ${saved.length} saved, ${skipped.length} skipped, ${failed.length} failed`);
       break;
     }
 
