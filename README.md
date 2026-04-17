@@ -719,7 +719,7 @@ L5: Insight Index      recall_insight            "cross-project experience"
 
 ### A/B Comparison: With vs Without AgentRecall
 
-We ran two controlled benchmarks: a 5-round A/B test simulating a multi-session SaaS project (Next.js + Drizzle + Stripe), and a 10-round v3.3.16 benchmark validating the new `digest` cache tool, `arsaveall`, and cross-project recall. Token costs are derived from actual measured counts — not estimates.
+We ran two controlled benchmarks: a 5-round A/B test simulating a multi-session SaaS project (Next.js + Drizzle + Stripe), and a 10-round v3.3.16 benchmark validating the new `digest` cache tool, `arsaveall`, and cross-project recall. Tool call token counts are measured. The "without AR" costs are modeled — we estimated what a human would spend re-explaining context rather than running real sessions without AR. These are honest estimates, not long-term production data. If your results differ, [let us know](mailto:tong.wu@novada.com).
 
 **"Without AR" models what a human must do manually:** re-paste architecture decisions, re-explain corrections, answer clarifying questions that AR would have loaded automatically.
 
