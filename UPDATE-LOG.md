@@ -12,6 +12,7 @@ This log tracks phase-by-phase improvements to AgentRecall's architecture, based
 | [Phase 2](#phase-2--ambient-recall) | Ambient Recall — remove agent discretion from retrieval | ✅ Done |
 | [Phase 3](#phase-3--multi-label-classification) | Multi-label Classification — memories findable from any angle | ✅ Done |
 | [Phase 4](#phase-4--corrections-as-first-class-citizens) | Corrections as First-Class Citizens — behavioral calibration layer | ✅ Done |
+| [Phase 2.5](#phase-25--intelligent-file-naming) | Intelligent File Naming — readable for humans, parseable for agents | 🔧 In Progress |
 | [Phase 5](#phase-5--protocol-foundations) | Protocol Foundations — schema + cross-LLM interoperability | 🔲 Long-term |
 
 ---
@@ -113,6 +114,64 @@ expiry: never
 
 ---
 
+## Phase 2.5 — Intelligent File Naming
+**Goal: every file name tells both humans and agents what's inside, how big it is, and how it was saved — without opening the file**
+
+### Problem
+Current naming: `2026-04-20.md`, `2026-04-20-277b1f.md`. Humans can't tell what happened. Agents must open every file to decide relevance. Random session-ID suffixes mean nothing. In a directory with 50+ entries, both humans and agents waste time.
+
+### Naming System
+
+```
+{date}--{save-type}--{lines}L--{topic-slug}.md
+  │        │           │          │
+  │        │           │          └── from generateSlug(summary) — semantic keywords
+  │        │           └── wc -l at save time — factual cost signal
+  │        └── arsave / arsaveall / hook-end / hook-correction / capture
+  └── YYYY-MM-DD
+```
+
+**Examples:**
+```
+2026-04-20--arsaveall--45L--ar-phase1-4-publish.md
+2026-04-20--hook-end--8L--auto.md
+2026-04-18--arsave--120L--genome-review-v23-gateway.md
+2026-04-18--hook-correction--12L--no-black-backgrounds.md
+2026-04-17--capture--6L--nextjs-render-prop-gotcha.md
+```
+
+**Why lines, not tokens or weight:**
+- `wc -l` is trivially computable — zero dependencies, zero classification risk
+- 1 line ≈ 10-15 tokens — agents estimate context cost instantly
+- Humans read naturally: "8L = stub, 120L = deep entry"
+- Weight/importance is a judgment call that can be wrong. Lines are a fact.
+- Agent decides importance itself using its own context — file just provides the cost
+
+**`--` double-dash separator** — parseable by agents:
+```
+split("--") → [date, save-type, lines, topic]
+```
+
+### Changes
+
+| Item | What | Status | Version |
+|------|------|--------|---------|
+| 2.5a | `sessionEnd` / `journalWrite` — new naming function using `{date}--{save-type}--{lines}L--{slug}.md` | 🔧 To build | — |
+| 2.5b | CLI `hook-end` — use `{date}--hook-end--{lines}L--auto.md` | 🔧 To build | — |
+| 2.5c | CLI `hook-correction` — use `{date}--hook-correction--{lines}L--{slug}.md` for any file output | 🔧 To build | — |
+| 2.5d | `captureLogFileName()` — use `{date}--capture--{lines}L--{slug}.md` | 🔧 To build | — |
+| 2.5e | CLI `hook-ambient` — no file output (stdout only), no change needed | ✅ N/A | — |
+| 2.5f | Update README naming convention section | 🔧 After code | — |
+| 2.5g | Migration: rename existing journal files to new format (optional, low priority) | 🔲 Later | — |
+
+### Design Principles
+- **Facts over judgment** — line count is objective; weight is subjective
+- **Agent decides importance** — filename provides cost, agent decides relevance
+- **Human glanceable** — readable in file browser without opening
+- **Parseable** — `split("--")` gives structured fields
+
+---
+
 ## Phase 5 — Protocol Foundations
 **Goal: define what AgentRecall IS, not just what it does**
 
@@ -146,6 +205,8 @@ When defined, any agent (Claude, GPT, Gemini) can read/write the same memory sto
 | v3.3.x | 2026-04 | Phase 1 (partial) | `hook-end`, `hook-correction`, `hook-start` wired into harness |
 | v3.3.18 | 2026-04-17 | Phase 1 complete | Benchmark caveat added; UPDATE-LOG created |
 | v3.3.18 | 2026-04-17 | Phase 2+3+4 | hook-ambient, multi-label tags, corrections store |
+| v3.3.19 | 2026-04-19 | README redesign | Package READMEs focused (mcp=284L, core=336L) |
+| — | — | Phase 2.5 | Intelligent file naming system |
 | — | — | Phase 5 | Protocol spec |
 
 ---
@@ -159,3 +220,4 @@ When defined, any agent (Claude, GPT, Gemini) can read/write the same memory sto
 5. **Honest benchmarks** — modeled estimates are disclosed as such; real data is the goal
 6. **One-instruction simplicity** — users want to type one thing and know everything is safe
 7. **Intelligent gap** — the long-term goal is not memory storage but reducing translation loss between human intent and agent execution
+8. **Facts over judgment in metadata** — line count (fact) beats weight (judgment) for file naming. Agent decides importance; system provides cost.

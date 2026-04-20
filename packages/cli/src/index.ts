@@ -448,10 +448,13 @@ async function main(): Promise<void> {
       try {
         const today = endToday;
 
-        // Auto-summarize from today's captures if any
+        // Only save if there's actual capture data from this session.
+        // If nothing was captured, don't create a useless stub file.
         const resolvedJournalDir = path.join(os.homedir(), ".agent-recall", "projects", project ?? "auto", "journal");
         const logFile = path.join(resolvedJournalDir, `${today}-log.md`);
-        let summary = "Session ended (auto-saved via hook)";
+
+        // Check for captures
+        let summary = "";
         if (fs.existsSync(logFile)) {
           const logContent = fs.readFileSync(logFile, "utf-8");
           const answers = logContent.match(/\*\*A:\*\*\s*(.+)/g) ?? [];
@@ -460,7 +463,22 @@ async function main(): Promise<void> {
           }
         }
 
-        await core.sessionEnd({ summary, project });
+        // Also check if any smart-named journal was already written today (by /arsave)
+        const existingToday = fs.existsSync(resolvedJournalDir)
+          ? fs.readdirSync(resolvedJournalDir).some(f => f.startsWith(today) && f.endsWith(".md") && f !== "index.md")
+          : false;
+
+        if (!summary && existingToday) {
+          // /arsave already ran today — no stub needed
+          process.exit(0);
+        }
+
+        if (!summary) {
+          // No captures, no existing journal — nothing worth saving. Skip silently.
+          process.exit(0);
+        }
+
+        await core.sessionEnd({ summary, project, saveType: "hook-end" });
         process.stderr.write(`[AgentRecall] Session auto-saved\n`);
       } catch (e) {
         process.stderr.write(`[AgentRecall hook-end] ${String(e)}\n`);

@@ -9,6 +9,7 @@ import { awarenessUpdate } from "./awareness-update.js";
 import { consolidateJournalToPalace } from "../palace/consolidate.js";
 import { resolveProject } from "../storage/project.js";
 import { ensurePalaceInitialized } from "../palace/rooms.js";
+import type { SaveType } from "../storage/session.js";
 
 export interface SessionEndInput {
   summary: string;
@@ -21,6 +22,7 @@ export interface SessionEndInput {
   }>;
   trajectory?: string;
   project?: string;
+  saveType?: SaveType;
 }
 
 export interface SessionEndResult {
@@ -47,7 +49,7 @@ export async function sessionEnd(input: SessionEndInput): Promise<SessionEndResu
       input.trajectory ? `## Next\n${input.trajectory}` : "",
     ].filter(Boolean).join("\n");
 
-    await journalWrite({ content: journalContent, project: slug });
+    await journalWrite({ content: journalContent, project: slug, saveType: input.saveType ?? "arsave" });
     journalWritten = true;
   } catch {
     // Journal write is best-effort

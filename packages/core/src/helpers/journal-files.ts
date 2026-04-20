@@ -17,29 +17,43 @@ export function listJournalFiles(project: string): JournalEntry[] {
   const entries: JournalEntry[] = [];
   const seen = new Set<string>();
 
-  // First pass: look for YYYY-MM-DD.md and YYYY-MM-DD-{sessionId}.md journal entries
+  // First pass: look for journal entries (both legacy and smart-named)
+  // Legacy:  YYYY-MM-DD.md, YYYY-MM-DD-{sessionId}.md
+  // Smart:   YYYY-MM-DD--{saveType}--{lines}L--{slug}.md
   for (const dir of dirs) {
     if (!fs.existsSync(dir)) continue;
     const files = fs.readdirSync(dir);
     for (const file of files) {
-      // Match: YYYY-MM-DD.md or YYYY-MM-DD-{sessionId}.md (but not -log.md variants)
-      const match = file.match(/^(\d{4}-\d{2}-\d{2})(?:-[a-f0-9]{6})?\.md$/);
-      if (match && !seen.has(file)) {
+      if (!file.endsWith(".md")) continue;
+      // Skip log/capture files — handled in second pass
+      if (file.includes("-log.md") || file.includes("--capture--")) continue;
+      // Skip index files
+      if (file === "index.md") continue;
+
+      const dateMatch = file.match(/^(\d{4}-\d{2}-\d{2})/);
+      if (dateMatch && !seen.has(file)) {
         seen.add(file);
-        entries.push({ date: match[1], file, dir });
+        entries.push({ date: dateMatch[1], file, dir });
       }
     }
   }
 
-  // Second pass: include YYYY-MM-DD-log.md and YYYY-MM-DD-{sessionId}-log.md capture files
+  // Second pass: include capture/log files (both legacy and smart-named)
+  // Legacy: YYYY-MM-DD-log.md, YYYY-MM-DD-{sessionId}-log.md
+  // Smart:  YYYY-MM-DD--capture--{lines}L--{slug}.md
   for (const dir of dirs) {
     if (!fs.existsSync(dir)) continue;
     const files = fs.readdirSync(dir);
     for (const file of files) {
-      const match = file.match(/^(\d{4}-\d{2}-\d{2})(?:-[a-f0-9]{6})?-log\.md$/);
-      if (match && !seen.has(file)) {
+      if (!file.endsWith(".md")) continue;
+      const isLegacyLog = file.includes("-log.md");
+      const isSmartCapture = file.includes("--capture--");
+      if (!isLegacyLog && !isSmartCapture) continue;
+
+      const dateMatch = file.match(/^(\d{4}-\d{2}-\d{2})/);
+      if (dateMatch && !seen.has(file)) {
         seen.add(file);
-        entries.push({ date: match[1], file, dir });
+        entries.push({ date: dateMatch[1], file, dir });
       }
     }
   }
@@ -56,31 +70,38 @@ export function readJournalFile(project: string, date: string): string | null {
   const primaryDir = journalDir(project);
   const allDirs = [primaryDir, ...dirs.filter((d) => d !== primaryDir)];
 
-  // Try exact date file first, then session-scoped variants, then -log variants
+  // Try exact date file first, then smart-named, then session-scoped, then logs
   for (const dir of allDirs) {
     if (!fs.existsSync(dir)) continue;
+    const files = fs.readdirSync(dir);
 
-    // Exact match
+    // Exact legacy match: YYYY-MM-DD.md
     const exact = path.join(dir, `${date}.md`);
     if (fs.existsSync(exact)) return fs.readFileSync(exact, "utf-8");
 
-    // Session-scoped variants: YYYY-MM-DD-{sessionId}.md — merge all for this date
-    const files = fs.readdirSync(dir);
+    // Smart-named files: YYYY-MM-DD--{saveType}--{lines}L--{slug}.md
+    const smartFiles = files.filter(f =>
+      f.startsWith(`${date}--`) && f.endsWith(".md") && !f.includes("--capture--")
+    );
+    if (smartFiles.length > 0) {
+      const parts = smartFiles.map(f => fs.readFileSync(path.join(dir, f), "utf-8"));
+      return parts.join("\n\n---\n\n");
+    }
+
+    // Legacy session-scoped: YYYY-MM-DD-{sessionId}.md
     const sessionFiles = files.filter(f => f.match(new RegExp(`^${date}-[a-f0-9]{6}\\.md$`)));
     if (sessionFiles.length > 0) {
-      // Return all session journals for this date, merged
       const parts = sessionFiles.map(f => fs.readFileSync(path.join(dir, f), "utf-8"));
       return parts.join("\n\n---\n\n");
     }
 
-    // Fall back to log file
-    const logFile = path.join(dir, `${date}-log.md`);
-    if (fs.existsSync(logFile)) return fs.readFileSync(logFile, "utf-8");
-
-    // Session-scoped log variants
-    const sessionLogs = files.filter(f => f.match(new RegExp(`^${date}-[a-f0-9]{6}-log\\.md$`)));
-    if (sessionLogs.length > 0) {
-      const parts = sessionLogs.map(f => fs.readFileSync(path.join(dir, f), "utf-8"));
+    // Capture/log files (both formats)
+    const captureFiles = files.filter(f =>
+      f.startsWith(date) && f.endsWith(".md") &&
+      (f.includes("-log.md") || f.includes("--capture--"))
+    );
+    if (captureFiles.length > 0) {
+      const parts = captureFiles.map(f => fs.readFileSync(path.join(dir, f), "utf-8"));
       return parts.join("\n\n---\n\n");
     }
   }

@@ -9,13 +9,14 @@ import { ensurePalaceInitialized, roomExists, createRoom } from "../palace/rooms
 import { fanOut } from "../palace/fan-out.js";
 import { generateFrontmatter } from "../palace/obsidian.js";
 import { updatePalaceIndex } from "../palace/index-manager.js";
-import { journalFileName } from "../storage/session.js";
+import { journalFileName, type SaveType } from "../storage/session.js";
 
 export interface JournalWriteInput {
   content: string;
   section?: string | null;
   palace_room?: string;
   project?: string;
+  saveType?: SaveType;
 }
 
 export interface JournalWriteResult {
@@ -31,10 +32,11 @@ export async function journalWrite(input: JournalWriteInput): Promise<JournalWri
   const dir = journalDir(slug);
   ensureDir(dir);
 
-  // Session-safe filename: if another session already wrote today's journal,
-  // this session gets its own file (YYYY-MM-DD-{sessionId}.md) to avoid conflicts.
+  // Intelligent naming (v3.3.20+): {date}--{saveType}--{lines}L--{slug}.md
+  // Falls back to legacy {date}.md when no saveType provided.
   const basePath = path.join(dir, `${date}.md`);
-  const fileName = journalFileName(date, fs.existsSync(basePath));
+  const smartOpts = input.saveType ? { saveType: input.saveType, content: input.content } : undefined;
+  const fileName = journalFileName(date, fs.existsSync(basePath), smartOpts, dir);
   const filePath = path.join(dir, fileName);
 
   let existing = "";
