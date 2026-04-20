@@ -186,6 +186,9 @@ export { palaceSearch, type PalaceSearchInput, type PalaceSearchResult } from ".
 export { awarenessUpdate, type AwarenessUpdateInput, type AwarenessUpdateResult } from "./tools-logic/awareness-update.js";
 export { recallInsight, type RecallInsightInput, type RecallInsightResult } from "./tools-logic/recall-insight.js";
 
+// Tool logic — journal merge
+export { journalMerge, type JournalMergeInput, type MergeReceipt } from "./tools-logic/journal-merge.js";
+
 // Tool logic — smart routing
 export { smartRemember, type SmartRememberInput, type SmartRememberResult } from "./tools-logic/smart-remember.js";
 export { smartRecall, type SmartRecallInput, type SmartRecallResult } from "./tools-logic/smart-recall.js";

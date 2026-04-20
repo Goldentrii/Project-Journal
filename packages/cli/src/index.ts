@@ -91,6 +91,10 @@ HOOKS (auto-fired by Claude Code hooks — no agent discipline needed):
   ar hook-correction     Read UserPromptSubmit JSON from stdin, capture corrections silently
   ar hook-ambient        Read UserPromptSubmit JSON from stdin, inject relevant memories into context
   ar correct --goal "g" --correction "c" [--delta "d"]  Manually record a correction
+  ar merge <target> <source>   Merge two journal files (append source into target, backup source)
+
+DIAGNOSTICS:
+  ar stats             Show memory system health: corrections, feedback, insights, graph edges
 
 GLOBAL FLAGS:
   --root <path>     Storage root (default: ~/.agent-recall)
@@ -898,6 +902,23 @@ async function main(): Promise<void> {
       for (const p of skipped) output(`  ~ ${p} — already journaled, skipped`);
       for (const f of failed) output(`  ✗ ${f.proj} — ${f.err}`);
       output(`\nTotal: ${saved.length} saved, ${skipped.length} skipped, ${failed.length} failed`);
+      break;
+    }
+
+    case "merge": {
+      // Merge two journal files: append source into target, backup source
+      const mergeTarget = rest[0];
+      const mergeSource = rest[1];
+      if (!mergeTarget || !mergeSource) {
+        output("Usage: ar merge <target-file> <source-file>\nExample: ar merge 2026-04-18.md 2026-04-19.md");
+        break;
+      }
+      const mergeResult = await core.journalMerge({
+        target_file: mergeTarget,
+        source_file: mergeSource,
+        project,
+      });
+      output(mergeResult.card);
       break;
     }
 
