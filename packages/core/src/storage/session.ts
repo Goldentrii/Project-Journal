@@ -57,22 +57,27 @@ function topicSlug(content: string): string {
 export function journalFileName(date: string, baseExists: boolean, opts?: SmartNameOpts, dir?: string): string {
   // New intelligent naming
   if (opts?.saveType && opts?.content) {
+    // SAME-DAY RULE: one file per day per project.
+    // If ANY file for today already exists (smart or legacy), append to it.
+    if (dir) {
+      const existingToday = fs.readdirSync(dir)
+        .filter(f => f.startsWith(date) && f.endsWith(".md") && f !== "index.md" && !f.endsWith(".merged.md"))
+        .sort()  // deterministic: pick the first one
+        [0];
+
+      if (existingToday) {
+        ownedFiles.add(`smart:${existingToday}`);
+        return existingToday;
+      }
+    }
+
+    // No file for today — create a smart-named one
     const lines = opts.content.split("\n").length;
     const slug = topicSlug(opts.content);
     const name = `${date}--${opts.saveType}--${lines}L--${slug}.md`;
 
-    // Check collision: if file exists and wasn't written by this session, add suffix
     if (dir) {
-      const fullPath = path.join(dir, name);
-      const nameKey = `smart:${name}`;
-      if (ownedFiles.has(nameKey)) return name;
-      if (fs.existsSync(fullPath)) {
-        // Different session already wrote a file with this name — add suffix
-        const suffixed = `${date}--${opts.saveType}--${lines}L--${slug}-${SESSION_ID.slice(0, 4)}.md`;
-        ownedFiles.add(`smart:${suffixed}`);
-        return suffixed;
-      }
-      ownedFiles.add(nameKey);
+      ownedFiles.add(`smart:${name}`);
     }
     return name;
   }
