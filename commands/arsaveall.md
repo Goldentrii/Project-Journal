@@ -41,21 +41,54 @@ This single command:
 - For un-journaled projects: synthesizes summary from transcript head+tail → calls `session_end`
 - Skips projects already journaled
 
-### Step 3: Report
+### Step 3: Output the save card
 
-Show the CLI output, then add a brief summary:
+Render one card for this session (same format as `/arsave`), then a multi-session summary card below it.
 
+**This session card** (same as /arsave Step 5 — include session counter and correction blocks if applicable):
 ```
-/arsaveall complete
+──────────────────────────────────────────────────────────────
+  AgentRecall  ✓ Saved    <project-slug>   <YYYY-MM-DD>   #<N>
+──────────────────────────────────────────────────────────────
+  Journal       ~/.agent-recall/projects/<slug>/journal/
+                └─ <YYYY-MM-DD>.md                    [written]
 
-  ✓ cdance-eu — auto-rescued (81.3MB, 2 sessions)
-  ✓ build-any-website — auto-rescued (1.5MB)
-  ~ AgentRecall — already journaled, skipped
-  ~ novada-mcp — already journaled, skipped
-  ~ prismma — already journaled, skipped
+  Awareness     ~/.agent-recall/awareness.md
+                └─ <N> insights added  (<M> total)
 
-Total: 2 rescued, 3 skipped, 0 failed
+  Palace        ~/.agent-recall/projects/<slug>/palace/
+                └─ rooms/ + palace-index.json         [updated]
+──────────────────────────────────────────────────────────────
 ```
+
+**All sessions card** (after CLI scan completes):
+```
+──────────────────────────────────────────────────────────────
+  AgentRecall  ✓ Save All                       <YYYY-MM-DD>
+──────────────────────────────────────────────────────────────
+  ✓  <project-1>    ~/.agent-recall/projects/<project-1>/
+                    journal/<YYYY-MM-DD>.md         [rescued]
+
+  ✓  <project-2>    ~/.agent-recall/projects/<project-2>/
+                    journal/<YYYY-MM-DD>.md         [rescued]
+
+  ~  <project-3>    already journaled              [skipped]
+
+  ✗  <project-4>    transcript parse failed         [failed]
+
+──────────────────────────────────────────────────────────────
+  <N> rescued   <M> skipped   <K> failed
+  ~/.agent-recall/insights-index.json               [updated]
+  ~/.agent-recall/awareness.md                      [updated]
+──────────────────────────────────────────────────────────────
+```
+
+Rules for the all-sessions card:
+- One entry per project detected from transcript scan
+- Use `✓` rescued, `~` skipped, `✗` failed
+- Show actual project path indented below each entry
+- Bottom section always shows totals + global files updated
+- After the card, ask: **Push to GitHub?**
 
 ## Diagnostic: List sessions without saving
 

@@ -83,20 +83,12 @@ This single call:
 
 ### Step 4: Verify promotion
 
-After `session_end`, verify that content actually made it to the right places. Use `recall` to spot-check:
+After `session_end`, verify that content actually made it to the right places:
 
 1. Call `recall(query="<key decision from today>")` — confirm it appears in palace results
 2. Check the session_end response: `insights_processed` should match what you sent
 
-Report the verification result:
-```
-Promotion verified:
-  - Journal: written (YYYY-MM-DD)
-  - Awareness: N insights processed
-  - Palace: consolidated
-```
-
-Or if gaps found, use `remember` to manually save the missing content:
+If gaps found, use `remember` to manually save the missing content:
 ```
 remember({
   content: "<the missing decision/insight>",
@@ -104,16 +96,48 @@ remember({
 })
 ```
 
-### Step 5: Confirm and offer git push
+### Step 5: Output the save card
 
-Show the user a summary:
+Render the following card. Replace all `<placeholders>` with real values from the session_end response and the actual project slug. Count the project's journal files to get the session number (`ls ~/.agent-recall/projects/<slug>/journal/*.md 2>/dev/null | wc -l`).
+
 ```
-Journal: written
-Awareness: N insights added (M total)
-Palace: consolidated
+──────────────────────────────────────────────────────────────
+  AgentRecall  ✓ Saved    <project-slug>   <YYYY-MM-DD>   #<N>
+──────────────────────────────────────────────────────────────
+  Journal       ~/.agent-recall/projects/<slug>/journal/
+                └─ <YYYY-MM-DD>.md                    [written]
+
+  Awareness     ~/.agent-recall/awareness.md
+                └─ <N> insights added  (<M> total)
+
+  Palace        ~/.agent-recall/projects/<slug>/palace/
+                ├─ rooms/<room1>.md                   [updated]
+                ├─ rooms/<room2>.md                   [updated]
+                └─ palace-index.json                 [reindexed]
+
+  Insights      ~/.agent-recall/insights-index.json
+                └─ cross-project index updated
+──────────────────────────────────────────────────────────────
 ```
 
-Then ask: "Push to GitHub?" If yes, run:
+If any corrections were recorded this session via `check()`, append a distinct correction block **below** the card:
+
+```
+⚠  Correction saved  [<P0 or P1>]
+   ~/.agent-recall/projects/<slug>/palace/corrections.json
+   Rule: "<the rule that was stored>"
+```
+
+Use a separate block per correction. P0 (never/always/don't) gets `[P0]`, everything else `[P1]`.
+
+Rules for the card:
+- `#<N>` = total journal `.md` files in this project after this save
+- Omit Palace section if no rooms were touched
+- If palace rooms are unknown, show `palace/rooms/` without room names
+- Use `[skipped]` for rooms checked but unchanged
+- After the card and any correction blocks, ask: **Push to GitHub?**
+
+If yes, run:
 ```bash
 cd <project-root> && git add -A && git commit -m "session: YYYY-MM-DD <one-line summary>" && git push
 ```

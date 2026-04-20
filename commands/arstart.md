@@ -50,30 +50,46 @@ This hits the knowledge store for documented fixes, past decisions, and patterns
 
 This is the step that surfaces: "last time we touched this module, X broke" or "this API returns null on session expiry — always null-check" — things not in the awareness insights but stored as knowledge entries.
 
-### Step 4: Show cold-start brief
+### Step 4: Show cold-start card
 
-Present a compact summary:
+Render the following card. Replace all `<placeholders>` with real values from `session_start` and `recall`. Count the project's journal files to get the session number (`ls ~/.agent-recall/projects/<slug>/journal/*.md 2>/dev/null | wc -l`).
 
 ```
-Project: <name> — <identity>
-Last session: <date> — <what was done>
-Next: <top priority from journal>
+──────────────────────────────────────────────────────────────
+  AgentRecall  ✓ Loaded    <project-slug>   <YYYY-MM-DD>   #<N>
+──────────────────────────────────────────────────────────────
+  Identity      ~/.agent-recall/projects/<slug>/palace/
+                └─ identity.md                       [~50 tokens]
 
-Insights (top 3):
-  [N×] <insight>
-  [N×] <insight>
+  Palace        ~/.agent-recall/projects/<slug>/palace/rooms/
+                ├─ <room1>.md                           [loaded]
+                └─ <room2>.md                           [loaded]
 
-Past corrections — watch out:
-  - <pattern> (corrected N times)
+  Awareness     ~/.agent-recall/awareness.md
+                └─ <N> insights · <M> cross-project matches
 
-Relevant past knowledge:
-  - <knowledge hit 1>
-  - <knowledge hit 2>
+  Last session  <YYYY-MM-DD> — <one-line summary>
+  Next          <top priority from journal>
 
-Cross-project: N related insights from <project>
+  ⚠ watch_for  "<correction pattern>"          corrected <N>×
+                "<correction pattern>"          corrected <N>×
+──────────────────────────────────────────────────────────────
 ```
 
-Skip any section that returned empty — do not say "no insights found."
+Rules for the card:
+- `#<N>` = total journal `.md` files in this project (proxy for session count)
+- Show only palace rooms returned by `session_start` (top 2-3 by salience)
+- Omit `⚠ watch_for` section entirely if no corrections exist
+- Omit `Last session` / `Next` if no journal entries exist yet
+- After the card, if `recall` returned relevant hits, show them as a compact list below:
+
+```
+Relevant from memory:
+  • <knowledge hit 1>
+  • <knowledge hit 2>
+```
+
+Skip this list entirely if recall returned nothing relevant.
 
 ### Step 5: Ready to work
 
