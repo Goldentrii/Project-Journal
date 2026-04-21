@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="#quick-start"><b>Install</b></a> ·
-  <a href="#three-commands"><b>Commands</b></a> ·
+  <a href="#four-commands"><b>Commands</b></a> ·
   <a href="#auto-hooks"><b>Hooks</b></a> ·
   <a href="#6-mcp-tools"><b>Tools</b></a> ·
   <a href="#benchmarked-savings"><b>Benchmarks</b></a> ·
@@ -57,24 +57,26 @@ curl -o ~/.claude/skills/agent-recall/SKILL.md \
 **Install slash commands (Claude Code only):**
 ```bash
 mkdir -p ~/.claude/commands
-curl -o ~/.claude/commands/arsave.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arsave.md
+curl -o ~/.claude/commands/arstatus.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arstatus.md
 curl -o ~/.claude/commands/arstart.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arstart.md
+curl -o ~/.claude/commands/arsave.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arsave.md
 curl -o ~/.claude/commands/arsaveall.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arsaveall.md
 ```
 
 ---
 
-## Three Commands
+## Four Commands
 
 > That's all you need.
 
 | Command | When | What it does |
 |---------|------|-------------|
+| ⭐ **`/arstatus`** | **Every session start** | **Full status board across ALL projects — pending work, blockers, what to pick up. Start here.** |
+| **`/arstart`** | After picking a project | Load deep context for one project: palace rooms, corrections, task-specific recall |
 | **`/arsave`** | End of session | Write journal + consolidate to palace + update awareness |
-| **`/arstart`** | Start of session | Recall cross-project insights + walk palace + load context |
 | **`/arsaveall`** | End of day (multi-session) | Batch save all parallel sessions at once — scan, merge, deduplicate |
 
-Type `/arsave` after a session. Type `/arstart` next time. Everything loads back.
+**The session flow:** `/arstatus` → see everything in flight → pick a project → `/arstart <project>` → work → `/arsave`.
 
 **Running 5 agents in parallel?** Don't `/arsave` five times. Type **`/arsaveall`** once — it scans all sessions across all projects, merges them into consolidated journals, deduplicates insights. Each session writes to its own file (session-ID scoped), so no conflicts, no data loss.
 

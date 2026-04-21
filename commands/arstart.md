@@ -1,19 +1,25 @@
 ---
-description: "AgentRecall cold start — load full project context + task-specific recall in one shot."
+description: "AgentRecall project context loader — load full context for a specific project once you know what you're working on."
 ---
 
-# /arstart — AgentRecall Cold Start
+# /arstart — AgentRecall Project Context Loader
 
-One command to load all context at session start. No manual memory reading needed.
+Load deep context for a specific project: identity, palace rooms, corrections, and task-relevant recall — in two MCP calls.
+
+> **Starting a fresh session and don't know what to work on?**
+> Run `/arstatus` first — it shows all projects and pending work across everything.
+> Come back here once you've picked a project.
 
 ## When to Use
 
-**Default: USE IT.** Most projects are long-term and benefit from memory. Memory compounds — a small overhead today saves large context-rebuilding costs across future sessions.
+Use /arstart once you know which project you're working on:
+- You ran `/arstatus` and picked a project
+- You already know what you're working on (returning to an ongoing task)
+- An orchestrator dispatched you with a specific project brief
 
-**Skip /arstart only when** the task is truly single-session throwaway work:
-- Pure Q&A session (no project context needed)
-- Trivial one-off script that won't be revisited
-- Quick fix with no decisions worth recalling
+**Skip /arstart when:**
+- Pure Q&A with no project context needed
+- Trivial one-off task with no decisions worth recalling
 
 ## What This Does
 
@@ -99,10 +105,11 @@ If the user already stated the task in Step 1, skip this line and just get to wo
 
 ## Important Rules
 
-- **Be fast.** Cold start is two tool calls. Don't add extra calls unless recall returned 0 and you want to try a different query.
-- **Don't lecture.** Show the brief, offer insights, then get out of the way.
-- **Sparse data is fine.** New project with no palace, no journal — just say so briefly and proceed.
-- **hook-start already ran.** At session start, a quick preview (insights + recent + watch_for) was auto-loaded into the system context. /arstart completes that with cross-project data, rooms, and the task-specific recall. Don't re-explain what the hook already showed unless it's relevant to today's task.
-- **Call check() before significant actions.** If you're about to do something irreversible (publish to npm, push to git, delete files, deploy), call `check(goal="<what you're about to do>", confidence="high")` first. The `watch_for` patterns in the response tell you if you've been corrected on similar things before. This is 1 extra call that prevents repeated mistakes.
-- **One cold start per session.** If already ran, say so and offer to re-run if the project context has changed.
+- **Run /arstatus first if unsure.** If you don't know which project to load, run /arstatus to see the full status board, then come back here.
+- **Be fast.** Two tool calls: session_start + recall. Don't add extra calls unless recall returned 0.
+- **Don't lecture.** Show the card, offer insights, then get out of the way.
+- **Sparse data is fine.** New project with no palace, no journal — say so briefly and proceed.
+- **hook-start already ran.** At session start, a quick preview was auto-loaded. /arstart completes it with cross-project data, rooms, and task-specific recall. Don't re-explain what the hook already showed.
+- **Call check() before significant actions.** If you're about to do something irreversible (publish to npm, push to git, delete files, deploy), call `check(goal="<what you're about to do>", confidence="high")` first.
+- **One load per session.** If already ran, say so and offer to re-run if the project changed.
 - **Use `remember` for manual fixes.** If session_start returned sparse data on a project you know has content, use `remember` to re-surface it.
