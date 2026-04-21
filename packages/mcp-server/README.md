@@ -7,7 +7,7 @@
   <a href="https://www.npmjs.com/package/agent-recall-mcp"><img src="https://img.shields.io/npm/v/agent-recall-mcp?style=flat-square&label=MCP&color=5D34F2" alt="MCP npm"></a>
   <a href="https://github.com/Goldentrii/AgentRecall/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square" alt="License"></a>
   <a href="https://lobehub.com/mcp/goldentrii-agentrecall"><img src="https://lobehub.com/badge/mcp/goldentrii-agentrecall" alt="MCP Badge"></a>
-  <img src="https://img.shields.io/badge/MCP-6_tools-orange?style=flat-square" alt="Tools">
+  <img src="https://img.shields.io/badge/MCP-7_tools-orange?style=flat-square" alt="Tools">
   <img src="https://img.shields.io/badge/cloud-zero-blue?style=flat-square" alt="Zero Cloud">
   <img src="https://img.shields.io/badge/saves_up_to-57%25_tokens-FF6B6B?style=flat-square" alt="Token savings">
   <img src="https://img.shields.io/badge/break--even-3--4_sessions-22C55E?style=flat-square" alt="Break-even">
@@ -116,12 +116,13 @@ Hooks move the save burden from agent discretion → harness enforcement. The ag
 
 ---
 
-## 6 MCP Tools
+## 7 MCP Tools
 
-AgentRecall exposes 6 tools to your agent. Each tool composes multiple subsystems — the agent doesn't need to know about the plumbing.
+AgentRecall exposes 7 tools to your agent. Each tool composes multiple subsystems — the agent doesn't need to know about the plumbing.
 
 | Tool | What it does |
 |------|-------------|
+| ⭐ `project_board` | **Run this first.** Status board across ALL projects — pending work, blockers, numbered list to pick from. The MCP equivalent of `/arstatus`. Works in Codex, Cursor, Windsurf. |
 | `session_start` | Load project context. Returns identity, top insights, active rooms, cross-project matches, and `watch_for` warnings from past corrections. One call, ~400 tokens. |
 | `remember` | Save a memory. Auto-classifies and routes to the right store (journal, palace, knowledge, or awareness). Auto-generates semantic names for retrieval. |
 | `recall` | Search all memory stores with **Reciprocal Rank Fusion (RRF)**. Returns ranked results. Accepts `feedback` to rate previous results — positive boosts future ranking, negative penalizes. |

@@ -11,6 +11,7 @@ import { register as registerRecall } from "./tools/recall.js";
 import { register as registerSessionEnd } from "./tools/session-end.js";
 import { register as registerCheck } from "./tools/check.js";
 import { register as registerDigest } from "./tools/digest.js";
+import { register as registerProjectBoard } from "./tools/project-board.js";
 
 // ── Legacy tools (still importable for SDK/CLI, not registered by default) ──
 // DEPRECATED v3.4: use session_start instead
@@ -72,6 +73,7 @@ All data stays local. No cloud, no telemetry.
 
 if (args.includes("--list-tools")) {
   const tools = [
+    { name: "project_board", description: "Status board across all projects — run this first, before session_start" },
     { name: "session_start", description: "Load project context for a new session" },
     { name: "remember", description: "Save a memory — auto-routes to the right store" },
     { name: "recall", description: "Search all memory stores, return ranked results" },
@@ -83,7 +85,8 @@ if (args.includes("--list-tools")) {
   process.exit(0);
 }
 
-// Register only the 5 primary tools
+// Register primary tools
+registerProjectBoard(server);
 registerSessionStart(server);
 registerRemember(server);
 registerRecall(server);
