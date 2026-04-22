@@ -29,6 +29,12 @@ export interface SmartRememberResult {
   classification: string;
   auto_name: string;
   result: unknown;
+  /** Exact file path where the memory was stored */
+  file_path?: string;
+  /** Query hint: what to search to find this memory again */
+  retrieval_hint?: string;
+  /** Semantic tags assigned to this memory */
+  tags?: string[];
   consistency_warnings?: ConsistencyWarning[];
 }
 
@@ -175,12 +181,39 @@ export async function smartRemember(input: SmartRememberInput): Promise<SmartRem
     // Consistency check is best-effort — never blocks save
   }
 
+  // Extract file path from the routed result (transparent routing)
+  let file_path: string | undefined;
+  const resultObj = result as Record<string, unknown> | undefined;
+  if (resultObj) {
+    // palace_write returns file_path directly
+    if (typeof resultObj.file_path === "string") file_path = resultObj.file_path;
+    // knowledge_write returns file
+    else if (typeof resultObj.file === "string") file_path = resultObj.file;
+    // journal_capture doesn't return a path — construct from date
+  }
+
+  // Replace home dir for readability
+  const root = process.env.HOME ?? "";
+  const displayPath = file_path?.replace(root, "~") ?? undefined;
+
+  // Generate retrieval hint from keywords + classification
+  const hintWords = slugResult.keywords.slice(0, 3);
+  const retrieval_hint = hintWords.length > 0
+    ? `recall('${hintWords.join(" ")}')`
+    : undefined;
+
+  // Get tags from the routed result
+  const tags = generateTags(input.content, slugResult.contentType !== "general" ? slugResult.contentType : undefined);
+
   return {
     success: true,
     routed_to: route,
     classification: slugResult.contentType,
     auto_name: autoName,
     result,
+    file_path: displayPath,
+    retrieval_hint,
+    tags,
     consistency_warnings,
   };
 }
