@@ -379,6 +379,26 @@ export async function smartRecall(input: SmartRecallInput): Promise<SmartRecallR
   applyRRF(journalItems, rrfMap);
   applyRRF(insightItems, rrfMap);
 
+  // ── 4.5. Hot-window recency boost ──────────────────────────────────────
+  // Very recent items get a score multiplier. In active project work,
+  // the most recent context is almost always the most relevant.
+  // This supplements Ebbinghaus decay (which handles medium-term) with
+  // an ultra-short-term boost.
+  // Palace items have date: undefined — they are timeless and unaffected.
+  for (const entry of rrfMap.values()) {
+    if (entry.item.date) {
+      const hoursAgo = (Date.now() - new Date(entry.item.date).getTime()) / (1000 * 60 * 60);
+      if (hoursAgo < 6) {
+        entry.score *= 3.0;
+      } else if (hoursAgo < 24) {
+        entry.score *= 2.0;
+      } else if (hoursAgo < 72) {
+        entry.score *= 1.3;
+      }
+      // > 72 hours: no boost (normal decay handles it)
+    }
+  }
+
   // ── 5. Apply Beta feedback multiplier ────────────────────────────────────
   // betaUtility returns [0,1]; ×2 normalizes so neutral (0.5) = ×1.0.
   // Items with positive history are boosted; negative history suppressed.

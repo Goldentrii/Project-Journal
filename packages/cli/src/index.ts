@@ -623,14 +623,21 @@ async function main(): Promise<void> {
           prompt = raw;
         }
 
-        // --- FEEDBACK STEP (always runs, no rate limit) ---
+        // --- READ PREVIOUS SURFACED DATA (used by feedback + topic drift + dedup) ---
+        let prevSurfaced: { items?: { id: string; title: string }[]; query?: string; timestamp?: string; history?: string[] } | null = null;
         try {
           if (fs.existsSync(surfacedFile)) {
-            const surfaced = JSON.parse(fs.readFileSync(surfacedFile, "utf-8"));
-            const age = Date.now() - new Date(surfaced.timestamp).getTime();
+            prevSurfaced = JSON.parse(fs.readFileSync(surfacedFile, "utf-8"));
+          }
+        } catch { prevSurfaced = null; }
+
+        // --- FEEDBACK STEP (always runs, no rate limit) ---
+        try {
+          if (prevSurfaced) {
+            const age = Date.now() - new Date(prevSurfaced.timestamp ?? 0).getTime();
 
             // Only process feedback if surfaced items are recent (< 10 min)
-            if (age < 600_000 && Array.isArray(surfaced.items) && surfaced.items.length > 0) {
+            if (age < 600_000 && Array.isArray(prevSurfaced.items) && prevSurfaced.items.length > 0) {
               // Reuse the same CORRECTION_PATTERNS from hook-correction
               const CORRECTION_PATTERNS = [
                 // English
@@ -648,7 +655,7 @@ async function main(): Promise<void> {
               const isCorrection = CORRECTION_PATTERNS.some(p => p.test(prompt));
 
               // Build feedback array
-              const feedback = surfaced.items.map((item: { id: string; title: string }) => ({
+              const feedback = prevSurfaced.items!.map((item: { id: string; title: string }) => ({
                 id: item.id,
                 title: item.title,
                 useful: !isCorrection,  // correction after recall = negative; no correction = positive
@@ -657,19 +664,39 @@ async function main(): Promise<void> {
               // Submit feedback via smartRecall (which processes feedback param)
               try {
                 await core.smartRecall({
-                  query: surfaced.query || "feedback",
+                  query: prevSurfaced.query || "feedback",
                   project,
                   limit: 1,
                   feedback,
                 });
               } catch { /* best-effort */ }
             }
-
-            // Always clear after processing (consumed)
-            try { fs.unlinkSync(surfacedFile); } catch { /* non-blocking */ }
           }
         } catch { /* non-blocking — feedback is best-effort */ }
         // --- END FEEDBACK STEP ---
+
+        // --- TOPIC DRIFT DETECTION + DEDUP HISTORY ---
+        // Read history from previous surfaced data. If topic changed (keyword
+        // overlap < 30%), clear history to allow fresh results on new topics.
+        let surfacedHistory: string[] = [];
+        try {
+          if (prevSurfaced) {
+            surfacedHistory = Array.isArray(prevSurfaced.history) ? prevSurfaced.history : [];
+            const prevQuery = prevSurfaced.query ?? "";
+            if (prevQuery && prompt) {
+              const prevWords = new Set(prevQuery.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2));
+              const currWords = prompt.toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
+              if (prevWords.size > 0 && currWords.length > 0) {
+                const overlap = currWords.filter((w: string) => prevWords.has(w)).length / currWords.length;
+                if (overlap < 0.3) {
+                  // Topic changed — clear dedup history to allow fresh results
+                  surfacedHistory = [];
+                }
+              }
+            }
+          }
+        } catch { /* non-blocking */ }
+        // --- END TOPIC DRIFT DETECTION ---
 
         // Skip: too short, slash commands, short acks
         if (prompt.length < 25) process.exit(0);
@@ -696,8 +723,13 @@ async function main(): Promise<void> {
 
         const recalled = await core.smartRecall({ query: keywords.join(" "), project, limit: 3 });
 
-        // Format output
-        const items = recalled.results ?? [];
+        // Format output — filter below minimum relevance threshold (silence over noise)
+        const allItems = (recalled.results ?? []).filter(item => item.score >= 0.03);
+        if (allItems.length === 0) process.exit(0);
+
+        // Dedup window: filter out items already surfaced in recent fires
+        const historySet = new Set(surfacedHistory);
+        const items = allItems.filter(item => !historySet.has(item.id));
         if (items.length === 0) process.exit(0);
 
         let out = "[AgentRecall] Relevant past context:\n";
@@ -708,12 +740,17 @@ async function main(): Promise<void> {
         }
         process.stdout.write(out);
 
-        // Save surfaced items for feedback loop on next message
+        // Save surfaced items for feedback loop + update dedup history
         try {
+          // Append new item IDs to rolling history (max 15, drop oldest)
+          const newIds = items.map(item => item.id);
+          const updatedHistory = [...surfacedHistory, ...newIds].slice(-15);
+
           const surfacedData = {
             items: items.map(item => ({ id: item.id, title: item.title })),
             query: keywords.join(" "),
             timestamp: new Date().toISOString(),
+            history: updatedHistory,
           };
           fs.writeFileSync(surfacedFile, JSON.stringify(surfacedData), "utf-8");
         } catch { /* non-blocking */ }
