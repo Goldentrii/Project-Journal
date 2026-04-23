@@ -10,11 +10,11 @@ export function register(server: McpServer): void {
     inputSchema: {
       question: z
         .string()
-        .describe("The human's question or request (summarized, 1 sentence)"),
+        .describe("The human's question or request. Simple: 1 sentence. Complex technical question: 2-3 sentences is fine."),
       answer: z
         .string()
         .describe(
-          "The agent's key answer or decision (summarized, 1-2 sentences)"
+          "The agent's key answer or decision. Simple: 1-2 sentences. Complex answer with multiple parts (architecture decision, diagnosis, multi-step resolution): 3-5 sentences. Write enough to reconstruct the reasoning, not just the outcome."
         ),
       tags: z
         .array(z.string())

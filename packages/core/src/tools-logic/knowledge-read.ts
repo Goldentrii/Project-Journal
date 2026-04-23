@@ -93,8 +93,8 @@ export async function knowledgeRead(input: KnowledgeReadInput): Promise<string> 
     return "No knowledge entries found. Start logging lessons with knowledge_write.";
   }
 
-  if (combined.length > 5000) {
-    combined = combined.slice(0, 5000) + "\n\n...(truncated, narrow your query for more)";
+  if (combined.length > 15000) {
+    combined = combined.slice(0, 15000) + "\n\n...(truncated, narrow your query for more)";
   }
 
   return combined;

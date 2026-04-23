@@ -51,9 +51,11 @@ export async function journalCapture(input: JournalCaptureInput): Promise<Journa
   const tagStr = input.tags && input.tags.length > 0 ? ` [${input.tags.join(", ")}]` : "";
   const timestamp = new Date().toISOString().slice(11, 19);
 
+  const question = input.question.length > 2000 ? input.question.slice(0, 2000) + "..." : input.question;
+  const answer = input.answer.length > 5000 ? input.answer.slice(0, 5000) + "..." : input.answer;
   let entry = `### Q${entryNum} (${timestamp})${tagStr}\n\n`;
-  entry += `**Q:** ${input.question}\n\n`;
-  entry += `**A:** ${input.answer}\n\n`;
+  entry += `**Q:** ${question}\n\n`;
+  entry += `**A:** ${answer}\n\n`;
 
   if (!fs.existsSync(logPath)) {
     // Obsidian-compatible frontmatter for new capture logs

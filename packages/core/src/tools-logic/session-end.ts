@@ -42,6 +42,7 @@ export interface MergeSuggestion {
 export interface SessionEndResult {
   success: boolean;
   journal_written: boolean;
+  journal_write_error?: string;
   insights_processed: number;
   awareness_updated: boolean;
   palace_consolidated: boolean;
@@ -52,14 +53,35 @@ export interface SessionEndResult {
 export async function sessionEnd(input: SessionEndInput): Promise<SessionEndResult> {
   const slug = await resolveProject(input.project);
   let journalWritten = false;
+  let journalWriteError: string | undefined;
   let insightsProcessed = 0;
   let awarenessUpdated = false;
   let palaceConsolidated = false;
 
   // 1. Write journal summary
+  // Use ## Brief for first save of the day; ## Update HH:MM for subsequent saves
+  // This prevents duplicate ## Brief headers when /arsave is called multiple times per day
   try {
+    const jDir = journalDir(slug);
+    const date = todayISO();
+    let sectionHeading = "## Brief";
+    if (fs.existsSync(jDir)) {
+      const existingFiles = fs.readdirSync(jDir)
+        .filter(f => f.startsWith(date) && f.endsWith(".md") && f !== "index.md");
+      for (const f of existingFiles) {
+        const content = fs.readFileSync(path.join(jDir, f), "utf-8");
+        if (content.includes("## Brief")) {
+          const now = new Date();
+          const hh = now.getHours().toString().padStart(2, "0");
+          const mm = now.getMinutes().toString().padStart(2, "0");
+          sectionHeading = `## Update ${hh}:${mm}`;
+          break;
+        }
+      }
+    }
+
     const journalContent = [
-      "## Brief",
+      sectionHeading,
       input.summary,
       "",
       input.trajectory ? `## Next\n${input.trajectory}` : "",
@@ -67,8 +89,8 @@ export async function sessionEnd(input: SessionEndInput): Promise<SessionEndResu
 
     await journalWrite({ content: journalContent, project: slug, saveType: input.saveType ?? "arsave" });
     journalWritten = true;
-  } catch {
-    // Journal write is best-effort
+  } catch (err) {
+    journalWriteError = err instanceof Error ? err.message : String(err);
   }
 
   // 2. Update awareness with insights
@@ -113,7 +135,7 @@ export async function sessionEnd(input: SessionEndInput): Promise<SessionEndResu
           .sort()
           .reverse();
 
-        for (const file of files.slice(0, 15)) { // check last 15 entries
+        for (const file of files.slice(0, 30)) { // check last 30 entries
           const dateMatch = file.match(/^(\d{4}-\d{2}-\d{2})/);
           if (!dateMatch) continue;
           const fileDate = dateMatch[1];
@@ -127,7 +149,7 @@ export async function sessionEnd(input: SessionEndInput): Promise<SessionEndResu
 
           // Read first 500 chars of the file for keyword comparison
           const filePath = path.join(jDirPath, file);
-          const content = fs.readFileSync(filePath, "utf-8").slice(0, 500);
+          const content = fs.readFileSync(filePath, "utf-8").slice(0, 1500);
           const existingKeywords = extractKeywords(content, 6);
 
           // Compute overlap
@@ -184,7 +206,7 @@ export async function sessionEnd(input: SessionEndInput): Promise<SessionEndResu
     line,
     "",
     `  Journal       ${jDir.replace(root, "~/.agent-recall")}/`,
-    `                └─ ${date}.md                    ${journalWritten ? "[written]" : "[skipped]"}`,
+    `                └─ ${date}.md                    ${journalWritten ? "[written]" : journalWriteError ? `[FAILED: ${journalWriteError}]` : "[skipped]"}`,
     "",
     `  Awareness     ${insightsProcessed} insight${insightsProcessed !== 1 ? "s" : ""} added  (${totalInsights} total)`,
     "",
@@ -207,7 +229,7 @@ export async function sessionEnd(input: SessionEndInput): Promise<SessionEndResu
 
   if (mergeSuggestions.length > 0) {
     cardLines.push(`  ⚡ Similar entries found — consider merging:`);
-    for (const s of mergeSuggestions.slice(0, 2)) {
+    for (const s of mergeSuggestions.slice(0, 4)) {
       cardLines.push(`     ${s.date}  (${s.overlap_keywords.join(", ")})`);
     }
     cardLines.push("");
@@ -220,6 +242,7 @@ export async function sessionEnd(input: SessionEndInput): Promise<SessionEndResu
   return {
     success: journalWritten || awarenessUpdated,
     journal_written: journalWritten,
+    ...(journalWriteError ? { journal_write_error: journalWriteError } : {}),
     insights_processed: insightsProcessed,
     awareness_updated: awarenessUpdated,
     palace_consolidated: palaceConsolidated,

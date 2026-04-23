@@ -207,14 +207,16 @@ function readFeedbackLog(): FeedbackEntry[] {
   try { return JSON.parse(fs.readFileSync(p, "utf-8")); } catch { return []; }
 }
 
-function processFeedback(feedback: RecallFeedback[], query: string): void {
+function processFeedback(feedback: RecallFeedback[], query: string): FeedbackEntry[] {
   ensureDir(path.dirname(feedbackLogPath()));
   const log = readFeedbackLog();
   const date = new Date().toISOString().slice(0, 10);
   for (const f of feedback) {
     log.push({ query, id: f.id, title: f.title ?? "", useful: f.useful, date });
   }
-  fs.writeFileSync(feedbackLogPath(), JSON.stringify(log.slice(-200), null, 2), "utf-8");
+  const updated = log.slice(-1000);
+  fs.writeFileSync(feedbackLogPath(), JSON.stringify(updated, null, 2), "utf-8");
+  return updated;
 }
 
 /** Count positive and negative feedback for a result item. Query-aware. */
@@ -269,12 +271,12 @@ function applyRRF(
 // ---------------------------------------------------------------------------
 
 export async function smartRecall(input: SmartRecallInput): Promise<SmartRecallResult> {
-  if (input.feedback && input.feedback.length > 0) {
-    processFeedback(input.feedback, input.query);
-  }
+  // Process feedback first; reuse the returned log to avoid a second disk read
+  const feedbackLog = (input.feedback && input.feedback.length > 0)
+    ? processFeedback(input.feedback, input.query)
+    : readFeedbackLog();
 
   const limit = input.limit ?? 10;
-  const feedbackLog = readFeedbackLog();
   const queryWords = expandQuery(input.query.toLowerCase().split(/\s+/).filter((w) => w.length > 2));
   const sourcesQueried: string[] = [];
 
@@ -288,7 +290,7 @@ export async function smartRecall(input: SmartRecallInput): Promise<SmartRecallR
   // Ebbinghaus decay is minimal for palace (S=9999); salience already
   // incorporates access recency via recordAccess().
   try {
-    const palaceResults = await palaceSearch({ query: input.query, project: input.project });
+    const palaceResults = await palaceSearch({ query: input.query, project: input.project, limit: limit * 2 });
     sourcesQueried.push("palace");
 
     for (const r of palaceResults.results) {
@@ -329,6 +331,7 @@ export async function smartRecall(input: SmartRecallInput): Promise<SmartRecallR
       query: input.query,
       project: input.project,
       include_palace: false,
+      limit: Math.ceil(limit * 1.5),
     });
     sourcesQueried.push("journal");
 
@@ -376,11 +379,12 @@ export async function smartRecall(input: SmartRecallInput): Promise<SmartRecallR
       const confirmation = Math.min(1.0, Math.log2(i.confirmed + 1) / 3);
       const internalScore = relevance * 0.40 + exactness * 0.35 + confirmation * 0.25;
 
+      const rawExcerpt = `[${i.severity}] ${i.applies_when.join(", ")}`;
       insightItems.push({
         id,
         source: "insight",
         title: i.title,
-        excerpt: `[${i.severity}] ${i.applies_when.join(", ")}`,
+        excerpt: rawExcerpt.length > 300 ? rawExcerpt.slice(0, 300) + "..." : rawExcerpt,
         score: internalScore,
         confidence: scoreLabel(internalScore),
         severity: i.severity,

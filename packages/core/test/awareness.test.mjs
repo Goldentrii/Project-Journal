@@ -73,11 +73,11 @@ describe("Awareness system — module integration", () => {
     assert.equal(state.topInsights.length, 2);
   });
 
-  it("addInsight replaces lowest when over 10", () => {
+  it("addInsight replaces lowest when over 15", () => {
     // Reset to clean state
     awareness.initAwareness("overflow test");
 
-    // Add 10 completely distinct insights (no word overlap possible)
+    // Add 15 completely distinct insights (no word overlap possible)
     const topics = [
       "PostgreSQL indexing strategies",
       "Kubernetes pod autoscaling",
@@ -89,6 +89,11 @@ describe("Awareness system — module integration", () => {
       "gRPC streaming deadlines",
       "OAuth PKCE token rotation",
       "WASM sandboxing boundaries",
+      "Rust lifetime elision",
+      "Erlang supervision trees",
+      "eBPF kernel tracing",
+      "Cassandra compaction tuning",
+      "Nginx upstream health checks",
     ];
     for (const title of topics) {
       awareness.addInsight({
@@ -99,9 +104,9 @@ describe("Awareness system — module integration", () => {
       });
     }
     let state = awareness.readAwarenessState();
-    assert.equal(state.topInsights.length, 10);
+    assert.equal(state.topInsights.length, 15);
 
-    // 11th should trigger replacement
+    // 16th should trigger replacement
     const result = awareness.addInsight({
       title: "Completely novel Zig comptime metaprogramming",
       evidence: "Fresh evidence",
@@ -110,7 +115,7 @@ describe("Awareness system — module integration", () => {
     });
     assert.equal(result.action, "replaced");
     state = awareness.readAwarenessState();
-    assert.equal(state.topInsights.length, 10); // still 10, not 11
+    assert.equal(state.topInsights.length, 15); // still 15, not 16
   });
 
   it("writeAwareness enforces 200-line max", () => {

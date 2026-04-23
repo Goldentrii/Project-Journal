@@ -7,7 +7,7 @@ export function register(server: McpServer): void {
     title: "End Session",
     description: "Save session summary, insights, and trajectory. Writes journal, updates awareness, consolidates to palace.",
     inputSchema: {
-      summary: z.string().describe("What happened this session (1-3 sentences)."),
+      summary: z.string().describe("What happened this session. Simple session: 2-3 sentences. Multi-phase session: one paragraph per completed phase (e.g. 'Phase 1 — Name: what happened. Phase 2 — Name: what happened. Decisions: X. Blockers: Y.'). Never compress a multi-phase session to 2 sentences — it makes the journal useless."),
       insights: z.array(z.object({
         title: z.string(),
         evidence: z.string(),

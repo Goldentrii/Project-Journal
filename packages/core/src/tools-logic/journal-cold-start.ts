@@ -52,7 +52,7 @@ export async function journalColdStart(input: JournalColdStartInput): Promise<Jo
 
     const awarenessContent = readAwareness();
     if (awarenessContent) {
-      palaceContext.awareness_summary = awarenessContent.split("\n").slice(0, 15).join("\n");
+      palaceContext.awareness_summary = awarenessContent.split("\n").slice(0, 60).join("\n");
     }
 
     const rooms = listRooms(slug);
@@ -83,8 +83,8 @@ export async function journalColdStart(input: JournalColdStartInput): Promise<Jo
       const state = readState(slug, entry.date);
       const fullPath = path.join(entry.dir, entry.file);
       const stats = fs.statSync(fullPath);
-      const content = stats.size > 5120
-        ? fs.readFileSync(fullPath, "utf-8").slice(0, 5120) + "\n...(truncated)"
+      const content = stats.size > 20000
+        ? fs.readFileSync(fullPath, "utf-8").slice(0, 20000) + "\n...(truncated)"
         : fs.readFileSync(fullPath, "utf-8");
       hot.push({ date: entry.date, state, brief: extractSection(content, "brief") });
     } else if (ageDays <= 7) {

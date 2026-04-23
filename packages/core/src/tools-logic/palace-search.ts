@@ -9,6 +9,7 @@ export interface PalaceSearchInput {
   query: string;
   room?: string;
   project?: string;
+  limit?: number;
 }
 
 export interface PalaceSearchResult {
@@ -126,7 +127,7 @@ export async function palaceSearch(input: PalaceSearchInput): Promise<PalaceSear
 
   // Sort by keyword_score × salience so most relevant + important rooms surface first
   results.sort((a, b) => (b.keyword_score * b.salience) - (a.keyword_score * a.salience) || a.line - b.line);
-  const limited = results.slice(0, 20);
+  const limited = results.slice(0, input.limit ?? 20);
 
   return { project: slug, query: input.query, results: limited, total_matches: results.length };
 }

@@ -33,6 +33,7 @@ export async function journalRead(input: JournalReadInput): Promise<JournalReadR
   }
 
   const section = input.section ?? "all";
-  const extracted = extractSection(fileContent, section);
-  return { content: extracted || "", date: targetDate, project: slug };
+  const raw = extractSection(fileContent, section) || "";
+  const content = raw.length > 20000 ? raw.slice(0, 20000) + "\n\n...(truncated)" : raw;
+  return { content, date: targetDate, project: slug };
 }

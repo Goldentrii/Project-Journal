@@ -9,6 +9,7 @@ export interface JournalSearchInput {
   project?: string;
   section?: string;
   include_palace?: boolean;
+  limit?: number;
 }
 
 export interface JournalSearchResult {
@@ -42,6 +43,7 @@ export async function journalSearch(input: JournalSearchInput): Promise<JournalS
   const slug = await resolveProject(input.project);
   const dirs = journalDirs(slug);
   const keywords = queryKeywords(input.query);
+  const limit = input.limit ?? 25;
 
   const results: JournalSearchResult["results"] = [];
 
@@ -62,11 +64,12 @@ export async function journalSearch(input: JournalSearchInput): Promise<JournalS
         }
         if (input.section && currentSection !== input.section.toLowerCase()) continue;
         if (lineMatchesQuery(line, keywords)) {
+          if (results.length >= limit) break;
           const dateMatch = file.match(/^(\d{4}-\d{2}-\d{2})/);
           const date = dateMatch ? dateMatch[1] : file;
           const matchIdx = firstMatchIndex(line, keywords);
-          const start = Math.max(0, matchIdx - 40);
-          const end = Math.min(line.length, matchIdx + 80);
+          const start = Math.max(0, matchIdx - 100);
+          const end = Math.min(line.length, matchIdx + 150);
           let excerpt = line.slice(start, end).trim();
           if (start > 0) excerpt = "..." + excerpt;
           if (end < line.length) excerpt = excerpt + "...";

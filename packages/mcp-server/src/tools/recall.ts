@@ -9,7 +9,7 @@ export function register(server: McpServer): void {
     inputSchema: {
       query: z.string().describe("What to search for."),
       project: z.string().default("auto"),
-      limit: z.number().int().default(10).describe("Max results."),
+      limit: z.number().int().default(10).describe("Max results returned after RRF merge. Each source (palace, journal, insights) contributes up to limit×2 candidates before fusion."),
       feedback: z.array(z.object({
         id: z.string().optional().describe("Result ID from previous recall (preferred)."),
         title: z.string().optional().describe("Result title (fallback if no ID)."),

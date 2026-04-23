@@ -111,13 +111,13 @@ function classifyRoute(content: string, context?: string): Route {
 // ---------------------------------------------------------------------------
 
 export async function smartRemember(input: SmartRememberInput): Promise<SmartRememberResult> {
-  if (!input.content || input.content.trim().length < 10) {
+  if (!input.content || input.content.trim().length < 5) {
     return {
       success: false,
       routed_to: "rejected",
       classification: "too_short",
       auto_name: "",
-      result: { error: "Content too short (minimum 10 characters). Memory not saved." },
+      result: { error: "Content too short (minimum 5 characters). Memory not saved." },
     };
   }
 

@@ -71,7 +71,7 @@ export function consolidateJournalToPalace(
 
     for (const route of routes) {
       const sectionContent = extractSection(content, route.section);
-      if (!sectionContent || sectionContent.trim().length < 10) continue;
+      if (!sectionContent || sectionContent.trim().length < 5) continue;
 
       // Ensure room exists
       if (!roomExists(project, route.room)) {
@@ -126,7 +126,7 @@ export function consolidateJournalToPalace(
       const evoPath = path.join(pd, "rooms", "goals", "evolution.md");
       ensureDir(path.dirname(evoPath));
 
-      const evoEntry = `\n### ${entry.date} ${sourceRef}\n\n${brief.split("\n")[0]}\n`;
+      const evoEntry = `\n### ${entry.date} ${sourceRef}\n\n${brief.slice(0, 1000).trim()}\n`;
 
       if (fs.existsSync(evoPath)) {
         const existing = fs.readFileSync(evoPath, "utf-8");

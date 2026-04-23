@@ -70,17 +70,17 @@ export async function sessionStart(input: SessionStartInput): Promise<SessionSta
     return (b.lastConfirmed ?? "").localeCompare(a.lastConfirmed ?? "");
   });
   const insights = sortedInsights.slice(0, 5).map((i) => ({
-    title: sliceAtWord(i.title, 100),
+    title: sliceAtWord(i.title, 200),
     confirmed: i.confirmations ?? 1,
     severity: "important",
   }));
 
-  // 3. Active rooms — top 3 by salience
-  const rooms = listRooms(slug).slice(0, 3);
+  // 3. Active rooms — top 5 by salience
+  const rooms = listRooms(slug).slice(0, 5);
   const active_rooms: Array<{ name: string; salience: number; one_liner: string; topics?: string[] }> = rooms.map((r) => ({
     name: r.name,
     salience: r.salience,
-    one_liner: sliceAtWord(r.description, 100),
+    one_liner: sliceAtWord(r.description, 200),
   }));
 
   // 3b. Enhance rooms with topic keywords from room content
@@ -91,7 +91,7 @@ export async function sessionStart(input: SessionStartInput): Promise<SessionSta
       if (fs.existsSync(roomPath)) {
         const files = fs.readdirSync(roomPath).filter(f => f.endsWith(".md") && f !== "README.md");
         const allContent = files.slice(0, 5).map(f =>
-          fs.readFileSync(path.join(roomPath, f), "utf-8").slice(0, 200)
+          fs.readFileSync(path.join(roomPath, f), "utf-8").slice(0, 1000)
         ).join(" ");
         if (allContent.length > 0) {
           const topics = extractKeywords(allContent, 4);
@@ -103,7 +103,7 @@ export async function sessionStart(input: SessionStartInput): Promise<SessionSta
 
   // 4. Cross-project insights matching current context
   const context = input.context ?? slug;
-  const matched = recallInsights(context, 3);
+  const matched = recallInsights(context, 5);
   const cross_project = matched.map((i) => ({
     title: sliceAtWord(i.title, 100),
     from_project: (i.source ?? "unknown").slice(0, 30),
@@ -126,14 +126,15 @@ export async function sessionStart(input: SessionStartInput): Promise<SessionSta
       const dateMatch = file.match(/^(\d{4}-\d{2}-\d{2})/);
       if (!dateMatch) continue;
       const d = dateMatch[1];
-      if (d === today && !todayBrief) {
+      if (d === today) {
         const content = fs.readFileSync(path.join(dir, file), "utf-8");
         const brief = extractSection(content, "brief");
-        todayBrief = brief ? sliceAtWord(brief, 200) : sliceAtWord(content.split("\n").slice(0, 3).join(" "), 200);
+        const entry = brief ? sliceAtWord(brief, 400) : sliceAtWord(content.split("\n").slice(0, 3).join(" "), 400);
+        todayBrief = todayBrief ? `${todayBrief} | ${entry}` : entry;
       } else if (d === yesterday && !yesterdayBrief) {
         const content = fs.readFileSync(path.join(dir, file), "utf-8");
         const brief = extractSection(content, "brief");
-        yesterdayBrief = brief ? sliceAtWord(brief, 200) : sliceAtWord(content.split("\n").slice(0, 3).join(" "), 200);
+        yesterdayBrief = brief ? sliceAtWord(brief, 400) : sliceAtWord(content.split("\n").slice(0, 3).join(" "), 400);
       } else if (d < yesterday) {
         olderCount++;
       }
@@ -144,8 +145,8 @@ export async function sessionStart(input: SessionStartInput): Promise<SessionSta
   const alignLog = readAlignmentLog(slug);
   const watch_for = extractWatchPatterns(alignLog, 2);
 
-  // 7. P0 corrections — always-load behavioral rules (max 5 most recent)
-  const corrections = readP0Corrections(slug).slice(0, 5);
+  // 7. P0 corrections — always-load behavioral rules (max 10 most recent)
+  const corrections = readP0Corrections(slug).slice(0, 10);
 
   return {
     project: slug,

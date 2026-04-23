@@ -50,9 +50,9 @@ describe("Composite tools — session_start", () => {
     assert.ok(!json.includes("## Top Insights"), "Should not contain awareness section headers");
   });
 
-  it("active_rooms limited to 3", async () => {
+  it("active_rooms limited to 5", async () => {
     const result = await core.sessionStart({ project: "test-composite" });
-    assert.ok(result.active_rooms.length <= 3);
+    assert.ok(result.active_rooms.length <= 5);
   });
 });
 
@@ -157,18 +157,19 @@ describe("Awareness archive", () => {
   });
 
   it("demoted insights go to archive, not deleted", () => {
-    // Fill 10 insights
+    // Fill 15 insights
     const topics = [
       "PostgreSQL indexing", "Kubernetes scaling", "WebSocket pooling",
       "Redis caching", "Docker networking", "GraphQL resolvers",
       "OAuth token flow", "CI pipeline speed", "Monitoring alerts",
-      "API versioning",
+      "API versioning", "Rust lifetimes", "Erlang supervision",
+      "eBPF tracing", "Cassandra compaction", "Nginx upstreams",
     ];
     for (const topic of topics) {
       core.addInsight({ title: topic, evidence: `Evidence for ${topic}`, appliesWhen: [topic.split(" ")[0].toLowerCase()], source: "test" });
     }
 
-    // Add 11th — should demote the lowest
+    // Add 16th — should demote the lowest
     core.addInsight({ title: "Terraform state locking", evidence: "Lost state once", appliesWhen: ["terraform"], source: "test" });
 
     const archive = core.readAwarenessArchive();

@@ -29,7 +29,7 @@ export async function recallInsight(input: RecallInsightInput): Promise<RecallIn
   if (input.include_awareness !== false) {
     const raw = readAwareness();
     if (raw) {
-      awareness = raw.split("\n").slice(0, 100).join("\n");
+      awareness = raw.split("\n").slice(0, 200).join("\n");
     }
   }
 

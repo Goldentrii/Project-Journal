@@ -56,7 +56,8 @@ export async function palaceRead(input: PalaceReadInput): Promise<PalaceReadResu
     return { project: slug, error: `File not found: ${input.topic ? input.topic + '.md' : 'README.md'} in room '${input.room}'` };
   }
 
-  const content = fs.readFileSync(targetFile, "utf-8");
+  const raw = fs.readFileSync(targetFile, "utf-8");
+  const content = raw.length > 20000 ? raw.slice(0, 20000) + "\n\n...(truncated, use recall for specific excerpts)" : raw;
 
   return {
     project: slug,

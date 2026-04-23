@@ -120,7 +120,7 @@ export async function check(input: CheckInput): Promise<CheckResult> {
       similarDeltas.push({
         date: past.date,
         goal: past.goal.slice(0, 80),
-        delta: (past.delta ?? past.corrections?.join("; ") ?? "").slice(0, 120),
+        delta: (past.delta ?? past.corrections?.join("; ") ?? "").slice(0, 200),
       });
     }
   }

@@ -65,7 +65,7 @@ export async function awarenessUpdate(input: AwarenessUpdateInput): Promise<Awar
   }
 
   if (input.blind_spots && input.blind_spots.length > 0) {
-    state.blindSpots = input.blind_spots.slice(0, 5);
+    state.blindSpots = input.blind_spots.slice(0, 10);
   }
 
   state.lastUpdated = new Date().toISOString();

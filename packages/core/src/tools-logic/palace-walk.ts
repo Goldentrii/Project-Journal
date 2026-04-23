@@ -21,7 +21,7 @@ export function readRoomContent(project: string, room: RoomMeta): string {
   for (const file of files) {
     const filePath = path.join(roomPath, file);
     const text = fs.readFileSync(filePath, "utf-8");
-    const truncated = text.length > 500 ? text.slice(0, 500) + "\n...(truncated)" : text;
+    const truncated = text.length > 2000 ? text.slice(0, 2000) + "\n...(truncated)" : text;
     content += truncated + "\n\n";
   }
   return content;
@@ -69,7 +69,7 @@ export async function palaceWalk(input: PalaceWalkInput): Promise<PalaceWalkResu
     return { project: slug, depth, rooms_count: rooms.length, content: output.trim() };
   }
 
-  const topRooms = rooms.slice(0, 3);
+  const topRooms = rooms.slice(0, 5);
   output += "## Active Rooms\n\n";
   for (const room of topRooms) {
     output += roomSummary(room) + "\n";
@@ -99,7 +99,7 @@ export async function palaceWalk(input: PalaceWalkInput): Promise<PalaceWalkResu
         const readmePath = path.join(pd, "rooms", room.slug, "README.md");
         if (fs.existsSync(readmePath)) {
           const readme = fs.readFileSync(readmePath, "utf-8").replace(/^---[\s\S]*?---\n*/, "").trim();
-          output += "  " + readme.slice(0, 200) + "\n";
+          output += "  " + readme.slice(0, 1000) + "\n";
         }
         recordAccess(slug, room.slug);
       }
