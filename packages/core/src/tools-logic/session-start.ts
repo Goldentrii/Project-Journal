@@ -175,16 +175,10 @@ export async function sessionStart(input: SessionStartInput): Promise<SessionSta
     let lastTrajectory: string | null = null;
     if (mostRecentFilePath && fs.existsSync(mostRecentFilePath)) {
       const content = fs.readFileSync(mostRecentFilePath, "utf-8");
-      // Try extractSection("trajectory") first
-      const trajectorySection = extractSection(content, "trajectory");
+      // session_end writes trajectory under "## Next" — use "next" key to extract it
+      const trajectorySection = extractSection(content, "next") ?? extractSection(content, "trajectory");
       if (trajectorySection) {
         lastTrajectory = sliceAtWord(trajectorySection, 200);
-      } else {
-        // Grep for a line starting with "trajectory:" prefix
-        const trajectoryLine = content.split("\n").find((l) => /^trajectory:/i.test(l.trim()));
-        if (trajectoryLine) {
-          lastTrajectory = sliceAtWord(trajectoryLine.replace(/^trajectory:\s*/i, "").trim(), 200);
-        }
       }
     }
 

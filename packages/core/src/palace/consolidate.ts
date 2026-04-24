@@ -16,7 +16,7 @@ import { journalDir, palaceDir } from "../storage/paths.js";
 import { ensureDir, todayISO } from "../storage/fs-utils.js";
 import { listJournalFiles } from "../helpers/journal-files.js";
 import { extractSection } from "../helpers/sections.js";
-import { ensurePalaceInitialized, roomExists, createRoom, updateRoomMeta, touchRoom } from "./rooms.js";
+import { ensurePalaceInitialized, roomExists, createRoom, touchRoom } from "./rooms.js";
 import { fanOut } from "./fan-out.js";
 import { generateFrontmatter } from "./obsidian.js";
 import { updatePalaceIndex } from "./index-manager.js";
@@ -109,11 +109,6 @@ export function consolidateJournalToPalace(
         );
         touchRoom(project, route.room);
       }
-
-      // Update room metadata
-      updateRoomMeta(project, route.room, {
-        updated: new Date().toISOString(),
-      });
 
       updatedRooms.add(route.room);
       result.memoriesCreated++;
