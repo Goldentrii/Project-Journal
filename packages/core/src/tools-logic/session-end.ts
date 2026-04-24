@@ -51,6 +51,18 @@ export interface SessionEndResult {
 }
 
 export async function sessionEnd(input: SessionEndInput): Promise<SessionEndResult> {
+  if (!input.summary || input.summary.trim().length < 10) {
+    return {
+      success: false,
+      journal_written: false,
+      insights_processed: 0,
+      awareness_updated: false,
+      palace_consolidated: false,
+      card: "Summary too short (minimum 10 characters). Nothing saved.",
+      journal_write_error: "Summary too short (minimum 10 characters). Nothing saved.",
+    };
+  }
+
   const slug = await resolveProject(input.project);
   let journalWritten = false;
   let journalWriteError: string | undefined;

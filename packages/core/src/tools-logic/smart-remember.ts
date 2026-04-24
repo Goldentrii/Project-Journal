@@ -56,6 +56,9 @@ const ROUTE_SIGNALS: Record<Route, RegExp[]> = {
     /\balways\b/i, /\bnever\b/i, /\bpattern\b/i, /\bacross projects\b/i,
     /\binsight\b/i, /\bgeneral rule\b/i, /\bapplies when\b/i, /\brealized\b/i,
     /\bcross-project\b/i, /\bobserved that\b/i,
+    // Preference / style signals
+    /\bprefers?\b/i, /\bpreference[s:]?\b/i, /\balways uses?\b/i,
+    /\bstyle\s*:/i, /\buser wants\b/i, /\buser likes?\b/i,
   ],
   palace_write: [
     /\barchitecture\b/i, /\bdecision\b/i, /\bdesign\b/i, /\bschema\b/i,
@@ -80,6 +83,12 @@ const ROUTE_BOOSTS: Record<Route, number> = {
 
 function classifyRoute(content: string, context?: string): Route {
   const text = context ? `${context} ${content}` : content;
+
+  // Pre-check: git note patterns — "git: committed v3.3.27..." should be journal_capture,
+  // not knowledge_write. The "fix" keyword in git messages triggers the bug classifier.
+  if (/^git\s*:/i.test(content.trim()) || /\bcommitted\b.*v?\d+\.\d+\.\d+/i.test(content)) {
+    return "journal_capture";
+  }
 
   // Check context hint first (strong signal)
   if (context) {

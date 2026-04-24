@@ -215,7 +215,21 @@ function slugify(text: string): string {
  */
 export function generateSlug(content: string, context?: SlugContext): SlugResult {
   const contentType = context?.type ?? detectContentType(content);
-  const keywords = extractKeywords(content, 3);
+  let keywords = extractKeywords(content, 3);
+
+  // Fix RC2: deduplication against room name and content-type prefix.
+  // Without this, a file in room "architecture" of type "architecture" ends up
+  // named "architecture-architecture-...". Strip any keyword that is already
+  // present as a whole word in the room slug or the content-type string.
+  if (context?.room) {
+    const roomWords = new Set(
+      context.room.toLowerCase().split(/[-_\s]+/).filter((w) => w.length > 2)
+    );
+    const typeWords = new Set(
+      contentType.toLowerCase().split(/[-_\s]+/).filter((w) => w.length > 2)
+    );
+    keywords = keywords.filter((kw) => !roomWords.has(kw) && !typeWords.has(kw));
+  }
 
   // Build slug
   const parts = [contentType, ...keywords];

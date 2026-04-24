@@ -192,6 +192,7 @@ export { journalMerge, type JournalMergeInput, type MergeReceipt } from "./tools
 
 // Tool logic — smart routing
 export { smartRemember, type SmartRememberInput, type SmartRememberResult } from "./tools-logic/smart-remember.js";
+export { smartRemember as remember } from "./tools-logic/smart-remember.js";
 export { smartRecall, type SmartRecallInput, type SmartRecallResult } from "./tools-logic/smart-recall.js";
 
 // Tool logic — v3.4 composite tools (5-tool surface)

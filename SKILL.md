@@ -220,6 +220,14 @@ session_end({
 - Must be reusable. "Fixed a bug" is NOT an insight. "API returns null when session expires — always null-check auth responses" IS an insight.
 - `applies_when` keywords determine when this insight surfaces in future sessions across ALL projects.
 
+**Return fields:**
+- `journal_written` — boolean, true if journal entry was saved
+- `awareness_updated` — boolean, true if any insight was stored
+- `palace_consolidated` — boolean, true if palace rooms were updated
+- `insights_processed` — number of insights accepted
+- `card` — formatted save summary (box-drawing card)
+- `merge_suggestions` — array of similar recent entries (optional)
+
 ### `check`
 
 **When:** Before executing a complex task where you might misunderstand the human's intent.
