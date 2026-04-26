@@ -10,7 +10,7 @@
   <a href="https://www.npmjs.com/package/agent-recall-cli"><img src="https://img.shields.io/npm/v/agent-recall-cli?style=flat-square&label=CLI&color=10B981" alt="CLI npm"></a>
   <a href="https://github.com/Goldentrii/AgentRecall/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square" alt="License"></a>
   <a href="https://lobehub.com/mcp/goldentrii-agentrecall"><img src="https://lobehub.com/badge/mcp/goldentrii-agentrecall" alt="MCP Badge"></a>
-  <img src="https://img.shields.io/badge/MCP-6_tools-orange?style=flat-square" alt="Tools">
+  <img src="https://img.shields.io/badge/MCP-10_tools-orange?style=flat-square" alt="Tools">
   <img src="https://img.shields.io/badge/cloud-zero-blue?style=flat-square" alt="Zero Cloud">
   <img src="https://img.shields.io/badge/Obsidian-compatible-7C3AED?style=flat-square" alt="Obsidian">
   <img src="https://img.shields.io/badge/digest_cache-83%25_token_savings-FF6B6B?style=flat-square" alt="Digest cache savings">
@@ -45,10 +45,11 @@
 ---
 
 <p align="center">
-  <a href="#arstatus-arsave-arstart-and-arsaveall"><img src="https://img.shields.io/badge/%2Farstatus-START_HERE-22C55E?style=for-the-badge" alt="/arstatus"></a>
-  <a href="#arstatus-arsave-arstart-and-arsaveall"><img src="https://img.shields.io/badge/%2Farstart-Load_Context-4ECDC4?style=for-the-badge" alt="/arstart"></a>
-  <a href="#arstatus-arsave-arstart-and-arsaveall"><img src="https://img.shields.io/badge/%2Farsave-Save_Session-FF6B6B?style=for-the-badge" alt="/arsave"></a>
-  <a href="#arstatus-arsave-arstart-and-arsaveall"><img src="https://img.shields.io/badge/%2Farsaveall-Batch_Save_All-FFD93D?style=for-the-badge" alt="/arsaveall"></a>
+  <a href="#arstatus-arsave-arstart-arsaveall-and-arbootstrap"><img src="https://img.shields.io/badge/%2Farstatus-START_HERE-22C55E?style=for-the-badge" alt="/arstatus"></a>
+  <a href="#arstatus-arsave-arstart-arsaveall-and-arbootstrap"><img src="https://img.shields.io/badge/%2Farstart-Load_Context-4ECDC4?style=for-the-badge" alt="/arstart"></a>
+  <a href="#arstatus-arsave-arstart-arsaveall-and-arbootstrap"><img src="https://img.shields.io/badge/%2Farsave-Save_Session-FF6B6B?style=for-the-badge" alt="/arsave"></a>
+  <a href="#arstatus-arsave-arstart-arsaveall-and-arbootstrap"><img src="https://img.shields.io/badge/%2Farsaveall-Batch_Save_All-FFD93D?style=for-the-badge" alt="/arsaveall"></a>
+  <a href="#already-using-another-memory-system-transfer-in-seconds"><img src="https://img.shields.io/badge/%2Farbootstrap-Transfer_Memory-8B5CF6?style=for-the-badge" alt="/arbootstrap"></a>
 </p>
 <p align="center">
   <img src="https://img.shields.io/badge/AUTO-hook--start-8B5CF6?style=for-the-badge" alt="hook-start">
@@ -63,7 +64,7 @@
   <a href="#how-memory-compounds"><img src="https://img.shields.io/badge/5-FEEDBACK_LOOP-EF4444?style=for-the-badge" alt="Feedback Loop"></a>
 </p>
 
-## `/arstatus`, `/arsave`, `/arstart`, and `/arsaveall`
+## `/arstatus`, `/arsave`, `/arstart`, `/arsaveall`, and `/arbootstrap`
 
 > [!TIP]
 > **New to AgentRecall?** Read the **[→ Command Reference](docs/commands.md)** — full instructions, all example outputs, installation, and troubleshooting in one place.
@@ -77,6 +78,7 @@
 | **`/arstart`** | After picking a project | Load deep context for one project: palace rooms, corrections, task-specific recall |
 | **`/arsave`** | End of session | Write journal + consolidate to palace + update awareness |
 | **`/arsaveall`** | End of day (multi-session) | **Batch save all parallel sessions at once** — scan, merge, deduplicate, done |
+| **`/arbootstrap`** | **First install / switching from another memory system** | **Scan your machine for existing projects and import them into AgentRecall in seconds** |
 
 **The session flow:** `/arstatus` → pick a number → `/arstart <project>` → work → `/arsave`.
 
@@ -173,6 +175,22 @@ Type `/arsaveall` → batch-saves all parallel sessions at once:
 ──────────────────────────────────────────────────────────────
 ```
 
+Type `/arbootstrap` → discover and import projects from your existing tools:
+
+```
+──────────────────────────────────────────────────────────────
+  AgentRecall  Bootstrap Complete      2026-04-26
+──────────────────────────────────────────────────────────────
+
+  12 projects created
+  87 items imported (identity, memory, architecture, trajectory)
+   3 items skipped
+   0 errors
+
+  Run /arstatus to see your projects.
+──────────────────────────────────────────────────────────────
+```
+
 The cards are **rendered server-side** — computed from actual operation results, not agent interpretation. What you see is always accurate.
 
 ```bash
@@ -182,6 +200,7 @@ curl -o ~/.claude/commands/arstatus.md https://raw.githubusercontent.com/Goldent
 curl -o ~/.claude/commands/arstart.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arstart.md
 curl -o ~/.claude/commands/arsave.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arsave.md
 curl -o ~/.claude/commands/arsaveall.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arsaveall.md
+curl -o ~/.claude/commands/arbootstrap.md https://raw.githubusercontent.com/Goldentrii/AgentRecall/main/commands/arbootstrap.md
 ```
 
 ### The Difference
@@ -210,6 +229,68 @@ Agent 5 finishes: you /arsave again            → Zero conflicts (session-ID sc
   → 5x the work, corrections lost             → One command, everything saved
   → Agent 3's correction unknown to Agent 5    → All agents share the same memory
 ```
+
+### Already Using Another Memory System? Transfer in Seconds
+
+> [!NOTE]
+> **You don't start from zero.** If you've been using Claude's built-in memory, Mem0, or just working in git repos — AgentRecall can discover and import your existing context automatically.
+
+Most users installing AgentRecall aren't starting fresh. They already have:
+- **Git repos** with months of commit history and project structure
+- **Claude AutoMemory** (`~/.claude/projects/`) with user profiles, feedback, and project memories
+- **CLAUDE.md files** with project conventions and architecture decisions
+
+**`/arbootstrap`** scans your machine and imports everything in one shot:
+
+```
+/arbootstrap
+
+──────────────────────────────────────────────────────────────
+  AgentRecall  Bootstrap Scan          2026-04-26
+──────────────────────────────────────────────────────────────
+
+  Found on your machine:
+      24 git repos
+      92 Claude memory files
+       3 CLAUDE.md files
+
+  Projects:
+      18 new (not yet in AgentRecall)
+      10 already imported
+
+  Scan time: 141ms
+──────────────────────────────────────────────────────────────
+```
+
+**What gets imported per project:**
+- **Identity** — project name, language, description → `palace/identity.md`
+- **Architecture** — CLAUDE.md conventions → `palace/rooms/architecture/`
+- **Memory** — Claude AutoMemory files → `palace/rooms/knowledge/`
+- **Trajectory** — recent git history → initial journal entry
+
+**Safety guarantees:**
+- Scan is read-only — never writes to your machine
+- Import only writes to `~/.agent-recall/` — never modifies source files
+- Skips `.env`, credentials, `.pem`, `.key` — never reads secrets
+- Projects already in AgentRecall are skipped (no double-import)
+
+**For MCP-only environments** (Codex, Cursor, VS Code Copilot):
+```
+bootstrap_scan()                    # discover what's on the machine
+bootstrap_import({ scan_result })   # import selected projects
+```
+
+**For CLI:**
+```bash
+ar bootstrap                        # scan and show results
+ar bootstrap --dry-run              # preview what would be imported
+ar bootstrap --import               # import all new projects
+ar bootstrap --import --project X   # import one project
+```
+
+After bootstrap, run `/arstatus` — your projects are ready.
+
+---
 
 ### Three Layers of Value
 
