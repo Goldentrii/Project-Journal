@@ -229,3 +229,14 @@ export { digestDir, digestGlobalDir } from "./storage/paths.js";
 export { digestStore } from "./tools-logic/digest-store.js";
 export { digestRecall } from "./tools-logic/digest-recall.js";
 export { digestRead } from "./tools-logic/digest-read.js";
+
+// Tool logic — bootstrap (layered scan + selective import)
+export {
+  bootstrapScan,
+  bootstrapImport,
+  type BootstrapScanResult,
+  type DiscoveredProject,
+  type ImportableItem,
+  type ImportSelection,
+  type ImportResult,
+} from "./tools-logic/bootstrap.js";
