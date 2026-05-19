@@ -129,7 +129,7 @@ export type { SaveType, SmartNameOpts } from "./storage/session.js";
 export { acquireLock, withLock } from "./storage/filelock.js";
 
 // Storage — corrections
-export { writeCorrection, readCorrections, readP0Corrections } from "./storage/corrections.js";
+export { writeCorrection, readCorrections, readActiveCorrections, readP0Corrections } from "./storage/corrections.js";
 export type { CorrectionRecord } from "./storage/corrections.js";
 
 // Helpers

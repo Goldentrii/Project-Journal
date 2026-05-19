@@ -22,6 +22,10 @@ export interface CorrectionRecord {
   rule: string;     // The rule in one sentence
   context: string;  // Full correction text
   tags: string[];
+  holder?: string;  // Who recorded this — defaults to date/session proxy
+  kind?: "correction" | "insight" | "hunch" | "fact";
+  weight?: number;  // Confidence 0-1, defaults from severity
+  active?: boolean; // false = archived/superseded
 }
 
 // ---------------------------------------------------------------------------
@@ -53,6 +57,24 @@ function slugify(text: string): string {
     .slice(0, 40);
 }
 
+function defaultWeight(severity: "p0" | "p1"): number {
+  return severity === "p0" ? 1.0 : 0.7;
+}
+
+function todayDate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function applyCorrectionDefaults(record: CorrectionRecord, holderDefault: string): CorrectionRecord {
+  return {
+    ...record,
+    holder: record.holder ?? holderDefault,
+    kind: record.kind ?? "correction",
+    weight: record.weight ?? defaultWeight(record.severity),
+    active: record.active ?? true,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
@@ -67,7 +89,7 @@ export function writeCorrection(project: string, correction: CorrectionRecord): 
 
   // Auto-detect severity if not already set
   const severity = correction.severity ?? detectSeverity(`${correction.rule} ${correction.context}`);
-  const record: CorrectionRecord = { ...correction, severity };
+  const record = applyCorrectionDefaults({ ...correction, severity }, todayDate());
 
   const filename = `${record.date}-${slugify(record.rule || record.id)}.json`;
   const filepath = path.join(dir, filename);
@@ -92,13 +114,20 @@ export function readCorrections(project: string): CorrectionRecord[] {
     try {
       const raw = fs.readFileSync(path.join(dir, file), "utf-8");
       const parsed = JSON.parse(raw) as CorrectionRecord;
-      records.push(parsed);
+      records.push(applyCorrectionDefaults(parsed, parsed.date));
     } catch {
       // Skip malformed files silently
     }
   }
 
   return records;
+}
+
+/**
+ * Read only active corrections, sorted newest first.
+ */
+export function readActiveCorrections(project: string): CorrectionRecord[] {
+  return readCorrections(project).filter((r) => r.active !== false);
 }
 
 /**

@@ -40,7 +40,7 @@ export interface SessionStartInput {
 export interface SessionStartResult {
   project: string;
   identity: string;
-  insights: Array<{ title: string; confirmed: number; severity: string }>;
+  insights: Array<{ title: string; confirmed: number; severity: string; trend?: string }>;
   active_rooms: Array<{ name: string; salience: number; one_liner: string; topics?: string[]; last_updated: string; stale: boolean }>;
   cross_project: Array<{ title: string; from_project: string; relevance: number }>;
   recent: { today: string | null; yesterday: string | null; older_count: number };
@@ -87,6 +87,7 @@ export async function sessionStart(input: SessionStartInput): Promise<SessionSta
     title: sliceAtWord(i.title, 200),
     confirmed: i.confirmations ?? 1,
     severity: i.severity ?? "important",
+    trend: i.trend,
   }));
 
   // 3. Active rooms — top 5 by salience

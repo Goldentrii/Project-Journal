@@ -73,6 +73,10 @@ export interface SmartRecallInput {
   project?: string;
   limit?: number;
   feedback?: RecallFeedback[];
+  /** Filter journal results to entries on or after this date.
+   *  Accepts ISO date ("2026-05-01") or relative duration ("7d").
+   *  Palace and insight results are unaffected. */
+  since?: string;
 }
 
 export interface SmartRecallResultItem {
@@ -292,7 +296,8 @@ function applyRRF(
 export async function localRecallSearch(
   query: string,
   project: string | undefined,
-  limit: number
+  limit: number,
+  since?: string
 ): Promise<SmartRecallResultItem[]> {
   const sourcesQueried: string[] = [];
 
@@ -348,6 +353,7 @@ export async function localRecallSearch(
       project,
       include_palace: false,
       limit: Math.ceil(limit * 1.5),
+      since,
     });
     sourcesQueried.push("journal");
 
@@ -492,7 +498,15 @@ export async function smartRecall(input: SmartRecallInput): Promise<SmartRecallR
   // Use configured backend (Supabase or Local)
   const { getRecallBackend } = await import("./recall-backend.js");
   const backend = await getRecallBackend();
-  const results = await backend.search(input.query, input.project, limit);
+  // Pass `since` to localRecallSearch when using the local backend.
+  // For other backends, a post-filter is applied after the search.
+  let results: SmartRecallResultItem[];
+  if (input.since) {
+    // Always use localRecallSearch when `since` is set — it pre-filters journal files.
+    results = await localRecallSearch(input.query, input.project, limit, input.since);
+  } else {
+    results = await backend.search(input.query, input.project, limit);
+  }
 
   // ── Apply Beta feedback multiplier (shared across all backends) ──────────
   // betaUtility returns [0,1]; ×2 normalizes so neutral (0.5) = ×1.0.

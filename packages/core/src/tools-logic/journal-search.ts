@@ -10,6 +10,24 @@ export interface JournalSearchInput {
   section?: string;
   include_palace?: boolean;
   limit?: number;
+  /** Filter journal results to entries on or after this date.
+   *  Accepts ISO date string ("2026-05-01") or relative duration ("7d", "30d").
+   *  Palace and insight results are unaffected. */
+  since?: string;
+}
+
+/**
+ * Parse a `since` value into a Date cutoff.
+ * Supports "Nd" (N days ago) and ISO date strings.
+ */
+export function parseSinceDate(since: string): Date {
+  const relMatch = since.match(/^(\d+)d$/i);
+  if (relMatch) {
+    const d = new Date();
+    d.setDate(d.getDate() - parseInt(relMatch[1], 10));
+    return d;
+  }
+  return new Date(since);
 }
 
 export interface JournalSearchResult {
@@ -46,6 +64,7 @@ export async function journalSearch(input: JournalSearchInput): Promise<JournalS
   const dirs = journalDirs(slug);
   const keywords = queryKeywords(input.query);
   const limit = input.limit ?? 25;
+  const sinceCutoff = input.since ? parseSinceDate(input.since) : null;
 
   const results: JournalSearchResult["results"] = [];
 
@@ -54,6 +73,14 @@ export async function journalSearch(input: JournalSearchInput): Promise<JournalS
     const files = fs.readdirSync(dir).filter((f) => f.endsWith(".md"));
 
     for (const file of files) {
+      // since-filter: skip files whose date is before the cutoff
+      if (sinceCutoff) {
+        const dateMatch = file.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (dateMatch) {
+          const fileDate = new Date(dateMatch[1]);
+          if (fileDate < sinceCutoff) continue;
+        }
+      }
       const filePath = path.join(dir, file);
       const content = fs.readFileSync(filePath, "utf-8");
       const lines = content.split("\n");

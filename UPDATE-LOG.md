@@ -210,6 +210,16 @@ When defined, any agent (Claude, GPT, Gemini) can read/write the same memory sto
 | v3.3.24 | 2026-04-22 | Palace + /arsave | Intent capture, palace selectivity rules, two arsave modes, /arstatus Why field, d<N> delete, AGENTS.md, commands.md |
 | v3.3.26 | 2026-04-23 | Bug fixes | listAllProjects: smart-named journals now counted (3 projects were invisible); awareness truncation at section boundaries |
 | v3.3.27 | 2026-04-23 | Bug fixes | Remove _cachedProject singleton (re-detect each call); ar rooms + session_start topics now use room description instead of raw content keywords |
+| v3.4.0 | 2026-04-24 | Phase journal | Weekly journal roll-up, palace-first cold start, promotion verification in /arsave |
+| v3.4.1 | 2026-04-25 | Memory pipeline | Sync logging, source_project tracking, insight promotion, awareness rollup |
+| v3.4.2 | 2026-04-26 | Fixes | VERSION constant sync, Supabase chain integration plan + Codex briefs added |
+| v3.4.3 | 2026-04-27 | Semantic recall | Merge pgvector + RRF — Supabase-backed semantic search pipeline |
+| v3.4.4–v3.4.6 | 2026-04-28 | Fixes | Inter-package core dep fix, dependency sync, minor patches |
+| v3.4.7 | 2026-04-29 | Security | Path traversal, regex injection, prototype pollution hardening |
+| v3.4.8 | 2026-04-30 | P0 corrections | Cross-project insights in hook-start; P0 corrections surface in session_start |
+| v3.4.9 | 2026-05-01 | Semantic prefetch | session-end prefetches related memories to speed up next session cold-start |
+| v3.4.10 | 2026-05-08 | /arstatus + security | Supabase semantic project ranking + cross-project insights; command surface audit (ARM pipeline: HIGH/MEDIUM/LOW fixes); Supabase setup guide |
+| v3.4.11 | 2026-05-19 | Corrections schema v2 + health | **What:** Extended `CorrectionRecord` with `holder`, `kind`, `weight`, `active` fields; added `readActiveCorrections()` export; `InsightTrend` type (`growing/weakening/stale/stable`) on Insight; `since?` time-filter on `journalSearch()`; 7 new corrections e2e tests via public barrel. **Why:** Corrections needed lifecycle fields to support archiving (`active:false`), weighting (`weight`), authorship (`holder`), and type classification (`kind`). Prior `weight:0`/`active:false` was being overwritten by defaults (nullish coalescing bug). `InsightTrend` makes awareness surfacing smarter — growing insights rank higher than stale ones. `since?` on journalSearch lets agents pull scoped recall windows without reading all journals. **How:** `applyCorrectionDefaults()` uses `??` (not `\|\|`) so falsy explicit values are preserved. `readActiveCorrections()` added as a filtered view on top of `readCorrections()`. `computeTrend()` in awareness.ts computes trend from confirmation count + recency. `parseSinceDate()` in journal-search.ts supports `"Nd"` (days) and ISO date strings. |
 | — | — | Phase 2.5 | Intelligent file naming system |
 | — | — | Phase 5 | Protocol spec |
 

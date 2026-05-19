@@ -65,6 +65,23 @@ export function writeAwareness(content: string): void {
   });
 }
 
+export type InsightTrend = "stable" | "growing" | "weakening" | "stale";
+
+/**
+ * Compute trend from confirmation history and recency.
+ * - growing:   3+ confirmations AND confirmed within last 7 days
+ * - stale:     not confirmed in 30+ days
+ * - weakening: confirmed but not seen in 14–30 days (fading)
+ * - stable:    everything else
+ */
+export function computeTrend(insight: { confirmations: number; lastConfirmed: string }): InsightTrend {
+  const daysSince = (Date.now() - new Date(insight.lastConfirmed).getTime()) / (1000 * 60 * 60 * 24);
+  if (daysSince > 30) return "stale";
+  if (insight.confirmations >= 3 && daysSince <= 7) return "growing";
+  if (daysSince > 14) return "weakening";
+  return "stable";
+}
+
 export interface Insight {
   id: string;
   title: string;
@@ -75,6 +92,7 @@ export interface Insight {
   source: string;
   source_project?: string;
   severity?: "critical" | "important" | "minor";
+  trend?: InsightTrend;
 }
 
 export interface CompoundInsight {
@@ -236,6 +254,7 @@ export function addInsight(
         resurrected.appliesWhen.push(aw);
       }
     }
+    resurrected.trend = computeTrend(resurrected);
     state.topInsights.push(resurrected);
     // Enforce 20-item cap — demote lowest if over limit
     if (state.topInsights.length > 20) {
@@ -279,6 +298,7 @@ export function addInsight(
           existing.appliesWhen.push(aw);
         }
       }
+      existing.trend = computeTrend(existing);
       writeAwarenessState(state);
       renderAwareness(state);
       return { action: "merged", insight: existing };
@@ -303,6 +323,7 @@ export function addInsight(
           existing.appliesWhen.push(aw);
         }
       }
+      existing.trend = computeTrend(existing);
       writeAwarenessState(state);
       renderAwareness(state);
       return { action: "merged", insight: existing };
@@ -322,6 +343,7 @@ export function addInsight(
     source: newInsight.source,
     source_project: newInsight.source_project ?? "_global",
     severity: (newInsight as { severity?: "critical" | "important" | "minor" }).severity,
+    trend: "stable",
   };
 
   if (state.topInsights.length < 20) {
@@ -406,13 +428,14 @@ export function renderAwareness(state: AwarenessState): void {
   lines.push("");
   const sorted = [...state.topInsights].sort((a, b) => b.confirmations - a.confirmations);
   for (const insight of sorted) {
+    const trend = insight.trend ?? computeTrend(insight);
     lines.push(`### ${insight.title} (${insight.confirmations}x confirmed)`);
     lines.push(`- Evidence: ${insight.evidence.slice(0, 600)}`);
     lines.push(`- Applies when: ${insight.appliesWhen.join(", ")}`);
     const sourceLabel = insight.source_project
       ? `${insight.source} [${insight.source_project}]`
       : insight.source;
-    lines.push(`- Source: ${sourceLabel} | Last: ${insight.lastConfirmed.slice(0, 10)}`);
+    lines.push(`- Source: ${sourceLabel} | Last: ${insight.lastConfirmed.slice(0, 10)} | Trend: ${trend}`);
     lines.push("");
   }
 
